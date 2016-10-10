@@ -1,0 +1,128 @@
+"use strict";
+
+var NodeGit = require("../");
+var normalizeOptions = NodeGit.Utils.normalizeOptions;
+var lookupWrapper = NodeGit.Utils.lookupWrapper;
+var shallowClone = NodeGit.Utils.shallowClone;
+
+var Remote = NodeGit.Remote;
+var _connect = Remote.prototype.connect;
+var _download = Remote.prototype.download;
+var _fetch = Remote.prototype.fetch;
+var _push = Remote.prototype.push;
+
+/**
+ * Retrieves the remote by name
+ * @async
+ * @param {Repository} repo The repo that the remote lives in
+ * @param {String|Remote} name The remote to lookup
+ * @param {Function} callback
+ * @return {Remote}
+ */
+Remote.lookup = lookupWrapper(Remote);
+
+/**
+ * Connects to a remote
+ *
+ * @async
+ * @param {Enums.DIRECTION} direction The direction for the connection
+ * @param {RemoteCallbacks} callbacks The callback functions for the connection
+ * @param {ProxyOptions} proxyOpts Proxy settings
+ * @param {Array<string>} customHeaders extra HTTP headers to use
+ * @param {Function} callback
+ * @return {Number} error code
+ */
+Remote.prototype.connect = function (direction, callbacks, proxyOpts, customHeaders) {
+  callbacks = normalizeOptions(callbacks, NodeGit.RemoteCallbacks);
+  proxyOpts = normalizeOptions(proxyOpts || {}, NodeGit.ProxyOptions);
+  customHeaders = customHeaders || [];
+
+  return _connect.call(this, direction, callbacks, proxyOpts, customHeaders);
+};
+
+/**
+ * Connects to a remote
+ *
+ * @async
+ * @param {Array} refSpecs The ref specs that should be pushed
+ * @param {FetchOptions} opts The fetch options for download, contains callbacks
+ * @param {Function} callback
+ * @return {Number} error code
+ */
+Remote.prototype.download = function (refspecs, opts) {
+  var callbacks;
+
+  if (opts) {
+    opts = shallowClone(opts);
+    callbacks = opts.callbacks;
+    delete opts.callbacks;
+  } else {
+    opts = {};
+  }
+
+  opts = normalizeOptions(opts, NodeGit.FetchOptions);
+
+  if (callbacks) {
+    opts.callbacks = normalizeOptions(callbacks, NodeGit.RemoteCallbacks);
+  }
+
+  return _download.call(this, refspecs, opts);
+};
+
+/**
+ * Connects to a remote
+ *
+ * @async
+ * @param {Array} refSpecs The ref specs that should be pushed
+ * @param {FetchOptions} opts The fetch options for download, contains callbacks
+ * @param {String} message The message to use for the update reflog messages
+ * @param {Function} callback
+ * @return {Number} error code
+ */
+Remote.prototype.fetch = function (refspecs, opts, reflog_message) {
+  var callbacks;
+
+  if (opts) {
+    opts = shallowClone(opts);
+    callbacks = opts.callbacks;
+    delete opts.callbacks;
+  } else {
+    opts = {};
+  }
+
+  opts = normalizeOptions(opts, NodeGit.FetchOptions);
+
+  if (callbacks) {
+    opts.callbacks = normalizeOptions(callbacks, NodeGit.RemoteCallbacks);
+  }
+
+  return _fetch.call(this, refspecs, opts, reflog_message);
+};
+
+/**
+ * Pushes to a remote
+ *
+ * @async
+ * @param {Array} refSpecs The ref specs that should be pushed
+ * @param {PushOptions} options Options for the checkout
+ * @param {Function} callback
+ * @return {Number} error code
+ */
+Remote.prototype.push = function (refSpecs, opts) {
+  var callbacks;
+  if (opts) {
+    opts = shallowClone(opts);
+    callbacks = opts.callbacks;
+    delete opts.callbacks;
+  } else {
+    opts = {};
+  }
+
+  opts = normalizeOptions(opts, NodeGit.PushOptions);
+
+  if (callbacks) {
+    opts.callbacks = normalizeOptions(callbacks, NodeGit.RemoteCallbacks);
+  }
+
+  return _push.call(this, refSpecs, opts);
+};
