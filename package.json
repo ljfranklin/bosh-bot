@@ -10,7 +10,9 @@
     "nodegit": "^0.16.0",
     "tmp": "0.0.29"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^3.5.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
