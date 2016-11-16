@@ -29,7 +29,9 @@ describe('BoshBot', function(){
       user: 'alice'
     });
 
-    var bot = new BoshBot();
+    var bot = BoshBot({
+      envURL: 'https://my-bosh.com'
+    });
     bot.setup(testController)
   });
 
@@ -42,6 +44,13 @@ describe('BoshBot', function(){
     it('replies with pong', function() {
       alice.say('@bot ping');
       expect(testController.response()).to.eql('<@alice> pong');
+    });
+  });
+
+  describe('env', function(){
+    it('responds with the configured environment URL', function() {
+      alice.say('@bot env');
+      expect(testController.response()).to.eql('<@alice> Currently targeting *https://my-bosh.com*.');
     });
   });
 });
