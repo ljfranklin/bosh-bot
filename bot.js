@@ -14,12 +14,13 @@ if (!rawConfig) {
 // TODO: config validation
 var config = yaml.safeLoad(rawConfig);
 
+// TODO: verify all manifest paths exist
+
 var token = config.slack.token;
 if (!token) {
   console.error('Error: Set `slack.token` in your config. Info: https://api.slack.com/bot-users');
   process.exit(1);
 }
-
 
 console.log('Starting bot...');
 var controller = Botkit.slackbot({

@@ -39,6 +39,8 @@ describe('BoshBot', function() {
 
     boshConfig = {
       env: 'https://my-bosh.com',
+      user: 'admin',
+      password: 'fake-password',
     };
   });
 
@@ -48,7 +50,12 @@ describe('BoshBot', function() {
 
   function spawnBot() {
     var BoshBot = proxyquire('../src/bosh_bot', {
-      './bosh_runner': function() { return fakeRunner; },
+      './bosh_runner': function(runnerConfig) {
+        expect(runnerConfig.env).to.eql('https://my-bosh.com')
+        expect(runnerConfig.user).to.eql('admin');
+        expect(runnerConfig.password).to.eql('fake-password');
+        return fakeRunner;
+      },
     });
 
     var bot = BoshBot(boshConfig);
@@ -95,10 +102,15 @@ Using deployment 'concourse'
 -   version: '3263.7'
 `;
 
+    var vars_file_contents = `---
+fake_key: fake_value
+`;
+
     beforeEach(function() {
       boshConfig.deployments = {
         concourse: {
-          manifestPath: 'fake-manifest.yml',
+          manifest_path: 'fake-manifest.yml',
+          vars_file_contents: vars_file_contents,
         },
       }
     });
@@ -106,7 +118,11 @@ Using deployment 'concourse'
     it('starts the deployment', function(done) {
       spawnBot();
 
-      var expectedDeployOpts = { name: 'concourse', manifest: 'fake-manifest.yml' };
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents,
+      };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
 
@@ -145,7 +161,11 @@ Using deployment 'concourse'
     it('allows the user to cancel the deployment', function(done) {
       spawnBot();
 
-      var expectedDeployOpts = { name: 'concourse', manifest: 'fake-manifest.yml' };
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents,
+      };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
 
@@ -164,6 +184,10 @@ Using deployment 'concourse'
           expect(deployResponse).to.contain('mayday');
 
           alice.say('@bot mayday!');
+          var cancelResponse = testController.response();
+          expect(cancelResponse, 'no response found').to.not.be.null;
+          expect(cancelResponse).to.contain('@alice');
+          expect(cancelResponse).to.contain('Hold on');
 
           endCb(new Error('Deploy failed with exit code 1'));
           var deployEndResponse = testController.response();
@@ -183,7 +207,11 @@ Using deployment 'concourse'
     it('prints all output if deploy fails before task starts', function(done) {
       spawnBot();
 
-      var expectedDeployOpts = { name: 'concourse', manifest: 'fake-manifest.yml' };
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents,
+      };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
 

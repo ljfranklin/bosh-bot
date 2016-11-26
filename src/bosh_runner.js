@@ -1,14 +1,15 @@
 var spawnSync = require('child_process').spawnSync;
 var spawn = require('child_process').spawn;
+var exec = require('child_process').exec;
 var Readable = require('stream').Readable;
 
-function BoshRunner(config) {
+function BoshRunner(config = {}) {
   var runner = {};
 
   var boshEnv = {
-    // BOSH_ENVIRONMENT: config.env,
-    // BOSH_USER:        config.user,
-    // BOSH_PASSWORD:    config.password,
+    BOSH_ENVIRONMENT: config.env,
+    BOSH_USER:        config.user,
+    BOSH_PASSWORD:    config.password,
     PATH:             process.env.PATH,
   };
 
@@ -21,27 +22,34 @@ function BoshRunner(config) {
   runner.showDiff = function(opts, cb) {
     var {
       name,
-      manifest,
+      manifest_path,
+      vars_file_contents,
     } = opts;
 
     var stdin = new Readable();
-    // s._read = function noop() {}; // redundant? see update below
-    stdin.push('no');
-    stdin.push(null);
 
-    var boshProcess = spawn('bosh', ['--no-color', '--tty', 'deploy', '-d', name, manifest], {
+    var boshCmd = `bosh --no-color --tty deploy -d '${name}'`;
+    if (vars_file_contents) {
+      boshCmd += ` -l <(echo '${vars_file_contents}')`
+    }
+    boshCmd += ` ${manifest_path}`;
+    var boshProcess = spawn('bash', ['-c', boshCmd], {
       env: boshEnv,
       timeout: 20000,
       stdin: stdin,
     });
 
+    boshProcess.stdin.write('no');
+    boshProcess.stdin.end();
+
     var stdout = '';
     var stderr = '';
     boshProcess.stdout.on('data', function(out) {
-      stdout += out;
+      stdout += out.toString();
+      console.log(out.toString())
     });
     boshProcess.stderr.on('data', function(out) {
-      stderr += out;
+      stderr += out.toString();
     });
 
     boshProcess.on('error', function(err) {
@@ -55,26 +63,35 @@ function BoshRunner(config) {
   runner.deploy = function(opts, taskStartCb, taskEndedCb) {
     var {
       name,
-      manifest,
+      manifest_path,
+      vars_file_contents,
     } = opts;
 
-    var boshProcess = spawn('bosh', ['-n', '--no-color', '--tty', 'deploy', '-d', name, manifest], {
+    var boshCmd = `bosh -n --no-color --tty deploy -d '${name}'`;
+    if (vars_file_contents) {
+      boshCmd += ` -l <(echo '${vars_file_contents}')`
+    }
+    boshCmd += ` ${manifest_path}`;
+    var boshProcess = spawn('bash', ['-c', boshCmd], {
       env: boshEnv,
     });
 
     var taskNumber = null;
+    var boshOutput = '';
     boshProcess.stdout.on('data', function(out) {
-      matches = out.match(/Task ([0-9]+)/i)
+      boshOutput += out.toString();
+
+      matches = out.toString().match(/Task ([0-9]+)/i)
       if (taskNumber == null && matches) {
         taskNumber = matches[1];
         var cancelCb = function() {
-            boshProcess.kill('SIGINT');
+          cancelTask(taskNumber);
         };
         taskStartCb(taskNumber, cancelCb);
       }
     });
     boshProcess.stderr.on('data', function(out) {
-
+      boshOutput += out.toString();
     });
 
     boshProcess.on('error', function(err) {
@@ -84,10 +101,20 @@ function BoshRunner(config) {
       if (exitCode == 0) {
         taskEndedCb(null);
       } else {
-        taskEndedCb(new Error(`Deploy failed with exit code ${exitCode}`));
+        taskEndedCb(new Error(boshOutput));
       }
     });
   };
+
+  function cancelTask(taskID) {
+    exec(`bosh cancel-task ${taskID}`, { env: boshEnv }, function(err, stdout, stderr) {
+      if (err) {
+        console.log(`Error canceling task ${taskID}: ${err}`);
+      } else {
+        console.log(`Successfully canceled task ${taskID}`);
+      }
+    });
+  }
 
   return runner;
 }

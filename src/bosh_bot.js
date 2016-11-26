@@ -1,15 +1,15 @@
 var spawnSync = require('child_process').spawnSync;
 var BoshRunner = require('./bosh_runner');
 
-const deployPrompt = 'Continue? [yN]:';
-
 function BoshBot(config) {
   var boshbot = {
     env: config.env,
+    user: config.user,
+    password: config.password,
     deployments: config.deployments,
   }
 
-  var runner = BoshRunner();
+  var runner = BoshRunner(config);
 
   boshbot.setup = function(controller) {
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
@@ -32,8 +32,10 @@ function BoshBot(config) {
       // TODO: validation, err handling
       var deployOpts = {
         name: deploymentName,
-        manifest: boshbot.deployments[deploymentName].manifestPath,
+        manifest_path: boshbot.deployments[deploymentName].manifest_path,
+        vars_file_contents: boshbot.deployments[deploymentName].vars_file_contents,
       };
+
       runner.showDiff(deployOpts, function(err, stdout, stderr) {
         bot.startConversation(message,function(err,convo) {
 
@@ -47,18 +49,18 @@ function BoshBot(config) {
               convo.ask(cancelPrompt, [{ pattern: 'mayday', callback: function(response, convo) {
                 convo.say(`<@${message.user}> Hold on tight, this may get a little bumpy...`);
                 cancelCb();
-                // allow taskEnded callback to stop the convo
+                convo.next();
               }}]);
               convo.next();
             };
 
             var taskEnded = function(err) {
               if (err == null) {
-                bot.say(`<@${message.user}> Another successful landing, the deploy is finished!`);
+                bot.reply(message, `<@${message.user}> Another successful landing, the deploy is finished!`);
               } else if (taskID != null) {
-                bot.say(`<@${message.user}> Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`);
+                bot.reply(message, `<@${message.user}> Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`);
               } else {
-                bot.say(`<@${message.user}> Apologies for the delay folks. We need to fix a mechanical problem before take-off.\nReport: ${err}`);
+                bot.reply(message, `<@${message.user}> Apologies for the delay folks. We need to fix a mechanical problem before take-off.\nReport: ${err}`);
               }
 
               if (convo.isActive()) {
