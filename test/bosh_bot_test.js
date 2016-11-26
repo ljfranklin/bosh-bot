@@ -179,5 +179,41 @@ Using deployment 'concourse'
         });
       alice.say('@bot takeoff!');
     });
+
+    it('prints all output if deploy fails before task starts', function(done) {
+      spawnBot();
+
+      var expectedDeployOpts = { name: 'concourse', manifest: 'fake-manifest.yml' };
+      td.when(fakeRunner.showDiff(expectedDeployOpts))
+        .thenCallback(null, diffPrompt, '');
+
+      alice.say('@bot deploy concourse');
+
+      var diffResponse = testController.response();
+      expect(diffResponse, 'no response found').to.not.be.null;
+
+      td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
+        .thenDo(function(_, startCb, endCb) {
+          var errMessage = `
+Using environment 'bosh.lylefranklin.com' as user 'admin'
+
+Using deployment 'fake-name'
+
+Expected manifest to specify deployment name 'fake-name' but was 'concourse'
+
+Exit code 1`;
+          endCb(new Error(errMessage));
+
+          var deployEndResponse = testController.response();
+          expect(deployEndResponse, 'no response found').to.not.be.null;
+          expect(deployEndResponse).to.contain('@alice');
+          expect(deployEndResponse).to.contain(errMessage);
+
+          td.verify(fakeRunner.precheck());
+
+          done();
+        });
+      alice.say('@bot takeoff!');
+    });
   });
 });

@@ -58,7 +58,7 @@ function BoshBot(config) {
               } else if (taskID != null) {
                 bot.say(`<@${message.user}> Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`);
               } else {
-                // bot.say(`<@${message.user}> Apologies for the delay folks. We need to fix a mechanical problem before take-off.\nReport: ${err}`);
+                bot.say(`<@${message.user}> Apologies for the delay folks. We need to fix a mechanical problem before take-off.\nReport: ${err}`);
               }
 
               if (convo.isActive()) {
