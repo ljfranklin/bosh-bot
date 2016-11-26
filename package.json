@@ -11,7 +11,9 @@
     "tmp": "0.0.29"
   },
   "devDependencies": {
-    "chai": "^3.5.0"
+    "chai": "^3.5.0",
+    "proxyquire": "^1.7.10",
+    "testdouble": "^1.9.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

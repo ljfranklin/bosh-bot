@@ -203,6 +203,29 @@ describe('TestBot', function(){
       alice.say('hello');
     });
 
+    it('records multiple responses', function(done) {
+      var controller = TestBot({
+        debug: true
+      });
+      controller.spawn();
+
+      controller.on('message_received', function(bot, message) {
+        bot.startConversation(message, function(response, convo) {
+          convo.say('hello');
+          convo.say('hello again');
+          convo.next();
+
+          expect(controller.responses()).to.eql(['hello', 'hello again']);
+          done();
+        });
+      });
+
+      var alice = controller.createUser({
+        user: 'alice'
+      });
+      alice.say('hello');
+    });
+
     it('asks a question', function(done) {
       var controller = TestBot({
         debug: true

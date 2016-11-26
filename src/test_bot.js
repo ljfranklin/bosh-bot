@@ -23,7 +23,7 @@ function Testbot(configuration) {
         var eventTriggers = new Map();
 
         test_botkit.response = function() {
-          if (responses.length == 0) {
+          if (responses.length == 0 || responseCursor >= responses.length) {
             return null;
           }
 
@@ -83,21 +83,16 @@ function Testbot(configuration) {
         bot.startConversation = function(message, cb) {
           botkit.startConversation(this, message, function(_, convo) {
             // HACK: is there a better way to invoke tick?
-            var origAddMessage = convo.addMessage;
-            convo.addMessage = function(message, thread) {
-              origAddMessage.apply(convo, [message, thread]);
-              convo.tick();
-            };
-
             var origNext = convo.next;
             convo.next = function() {
               origNext.apply(convo);
-              while (convo.messages.length > 0) {
+              while (convo.isActive() && convo.messages.length > 0) {
                 convo.tick();
               }
             };
 
             cb(null, convo);
+            convo.tick();
           });
         };
         //
