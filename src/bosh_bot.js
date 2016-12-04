@@ -37,9 +37,10 @@ function BoshBot(config) {
       };
 
       runner.showDiff(deployOpts, function(err, stdout, stderr) {
+
         bot.startConversation(message,function(err,convo) {
 
-          var prompt = `<@${message.user}> Here's our flight plan for today:\n${stdout}\nRespond with 'takeoff' when you're ready!`;
+          var prompt = `<@${message.user}> Here's our flight plan for today:\n*${stdout}*\nRespond with 'takeoff' when you're ready!`;
           convo.ask(prompt, [{ pattern: 'takeoff', callback: function(response,convo) {
             var taskID = null;
             var taskStarted = function(id, cancelCb) {

@@ -13,6 +13,12 @@ function BoshRunner(config = {}) {
     PATH:             process.env.PATH,
   };
 
+  var patternsToRemoveFromOutput = [
+    'Using environment .*',
+    'Using deployment .*',
+    'Continue?.*',
+  ];
+
   runner.precheck = function() {
     if (spawnSync('which', ['bosh']).status != 0) {
       throw new Error('Error: Cannot find executate `bosh` in PATH. Grab the CLI from here: https://github.com/cloudfoundry/bosh-cli.');
@@ -46,17 +52,16 @@ function BoshRunner(config = {}) {
     var stderr = '';
     boshProcess.stdout.on('data', function(out) {
       stdout += out.toString();
-      console.log(out.toString())
     });
     boshProcess.stderr.on('data', function(out) {
       stderr += out.toString();
     });
 
     boshProcess.on('error', function(err) {
-      cb(err, stdout, stderr);
+      cb(err, filterOutput(stdout), stderr);
     });
     boshProcess.on('close', function(_) {
-      cb(null, stdout.replace('Continue? [yN]:', ''), stderr);
+      cb(null, filterOutput(stdout), stderr);
     });
   };
 
@@ -114,6 +119,17 @@ function BoshRunner(config = {}) {
         console.log(`Successfully canceled task ${taskID}`);
       }
     });
+  }
+
+  function filterOutput(output) {
+    patternsToRemoveFromOutput.forEach(function(pattern) {
+      output = output.replace(new RegExp(`^${pattern}$`, 'mg'), '')
+    });
+    output = output.trim();
+    if (output.length == 0) {
+      output = 'No changes...';
+    }
+    return output;
   }
 
   return runner;

@@ -89,10 +89,6 @@ describe('BoshBot', function() {
 
   describe('deploy', function(){
     var diffPrompt = `
-Using environment 'https://my-bosh.com' as user 'admin'
-
-Using deployment 'concourse'
-
   stemcells:
 + - alias: trusty
 +   os: ubuntu-trusty
