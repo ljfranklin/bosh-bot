@@ -73,6 +73,10 @@ function BoshBot(config) {
         });
       });
     });
+
+    controller.hears('.*',['direct_message','direct_mention','mention'],function(bot,message) {
+      bot.reply(message, `<@${message.user}> Sorry, didn't catch that...`);
+    });
   };
 
   return boshbot;

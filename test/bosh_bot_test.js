@@ -76,6 +76,13 @@ describe('BoshBot', function() {
       alice.say('@bot ping');
       expect(testController.response()).to.eql('<@alice> pong');
     });
+
+    it('responses on unsupported input', function() {
+      spawnBot();
+
+      alice.say('@bot foo');
+      expect(testController.response()).to.eql('<@alice> Sorry, didn\'t catch that...');
+    });
   });
 
   describe('env', function(){
