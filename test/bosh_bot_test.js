@@ -161,6 +161,51 @@ fake_key: fake_value
       alice.say('@bot takeoff!');
     });
 
+    it('cancels the deployment if user enters unsupported response', function() {
+      spawnBot();
+
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents,
+      };
+      td.when(fakeRunner.showDiff(expectedDeployOpts))
+        .thenCallback(null, diffPrompt, '');
+
+      alice.say('@bot deploy concourse');
+
+      var diffResponse = testController.response();
+      expect(diffResponse, 'no response found').to.not.be.null;
+
+      alice.say('@bot foo');
+
+      expect(testController.response()).to.eql("<@alice> I guess you don\'t want to *'takeoff'* after all...");
+
+      alice.say('@bot takeoff');
+
+      expect(testController.response()).to.eql("<@alice> Let me know our destination with *'deploy DESTINATION'*.");
+    });
+
+    it('cancels the deployment if user enters unknown deployment name', function() {
+      spawnBot();
+
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents,
+      };
+      td.when(fakeRunner.showDiff(expectedDeployOpts))
+        .thenCallback(null, diffPrompt, '');
+
+      alice.say('@bot deploy foo');
+
+      var diffResponse = testController.response();
+      expect(diffResponse, 'no response found').to.not.be.null;
+      expect(diffResponse).to.contain('alice');
+      expect(diffResponse).to.contain('foo');
+      expect(diffResponse).to.contain('concourse');
+    });
+
     it('allows the user to cancel the deployment', function(done) {
       spawnBot();
 

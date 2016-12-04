@@ -1,4 +1,3 @@
-var spawnSync = require('child_process').spawnSync;
 var BoshRunner = require('./bosh_runner');
 
 function BoshBot(config) {
@@ -10,6 +9,7 @@ function BoshBot(config) {
   }
 
   var runner = BoshRunner(config);
+  runner.precheck();
 
   boshbot.setup = function(controller) {
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
@@ -25,9 +25,13 @@ function BoshBot(config) {
     });
 
     controller.hears('deploy ([a-zA-Z0-9\-\_]+)',['direct_message','direct_mention','mention'],function(bot,message) {
-      runner.precheck();
-
       var deploymentName = message.match[1];
+
+      if (boshbot.deployments.hasOwnProperty(deploymentName) == false) {
+        var knownDeploymentNames = Object.keys(boshbot.deployments).map(function(val) { return `*${val}*`; });
+        bot.reply(message, `<@${message.user}> I'm afraid my navigator doesn't know the destination *${deploymentName}*. The destinations we know about are: ${knownDeploymentNames.join(', ')}.`);
+        return;
+      }
 
       // TODO: validation, err handling
       var deployOpts = {
@@ -40,13 +44,13 @@ function BoshBot(config) {
 
         bot.startConversation(message,function(err,convo) {
 
-          var prompt = `<@${message.user}> Here's our flight plan for today:\n*${stdout}*\nRespond with 'takeoff' when you're ready!`;
+          var prompt = `<@${message.user}> Here's our flight plan for today:\n*${stdout}*\nRespond with *'takeoff'* when you're ready!`;
           convo.ask(prompt, [{ pattern: 'takeoff', callback: function(response,convo) {
             var taskID = null;
             var taskStarted = function(id, cancelCb) {
               taskID = id;
 
-              var cancelPrompt = `<@${message.user}> We're off! Run \`bosh task ${taskID}\` to track the flight, and respond with 'mayday' to perform an emergency landing.`;
+              var cancelPrompt = `<@${message.user}> We're off! Run \`bosh task ${taskID}\` to track the flight, and respond with *'mayday'* to perform an emergency landing.`;
               convo.ask(cancelPrompt, [{ pattern: 'mayday', callback: function(response, convo) {
                 convo.say(`<@${message.user}> Hold on tight, this may get a little bumpy...`);
                 cancelCb();
@@ -69,9 +73,16 @@ function BoshBot(config) {
               }
             };
             runner.deploy(deployOpts, taskStarted, taskEnded);
+          }}, { default: true, callback: function(response, convo) {
+            convo.say(`<@${message.user}> I guess you don't want to *'takeoff'* after all...`);
+            convo.next();
           }}]);
         });
       });
+    });
+
+    controller.hears('takeoff',['direct_message','direct_mention','mention'],function(bot,message) {
+      bot.reply(message, `<@${message.user}> Let me know our destination with *'deploy DESTINATION'*.`);
     });
 
     controller.hears('.*',['direct_message','direct_mention','mention'],function(bot,message) {
