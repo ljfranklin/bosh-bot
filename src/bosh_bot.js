@@ -181,12 +181,12 @@ function BoshBot(config) {
       bot.reply(message, `<@${message.user}> Let's see if any flight upgrades are available...`);
       controller.updateReleases(function(err, uploadedReleaseNames) {
         if (err) {
-          bot.reply(message, `Sorry, we hit a glitch trying to check for upgrades: ${err}.`);
+          bot.reply(message, `<@${message.user}> Sorry, we hit a glitch trying to check for upgrades: ${err}.`);
           return;
         }
 
         if (uploadedReleaseNames.length == 0) {
-          bot.reply(message, `I'm sorry, there don't appear to be any upgrades available.`);
+          bot.reply(message, `<@${message.user}> I'm sorry, there don't appear to be any upgrades available.`);
           return;
         }
 
