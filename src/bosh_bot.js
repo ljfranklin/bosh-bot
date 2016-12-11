@@ -1,4 +1,7 @@
+var semver = require('semver');
+
 var BoshRunner = require('./bosh_runner');
+var BoshioClient = require('./boshio_client');
 
 function BoshBot(config) {
   var boshbot = {
@@ -6,12 +9,15 @@ function BoshBot(config) {
     user: config.user,
     password: config.password,
     deployments: config.deployments,
+    releasesToUpdate: config.releases_to_update,
   }
 
   var runner = BoshRunner(config);
   runner.precheck();
 
-  boshbot.setup = function(controller) {
+  var boshioClient = BoshioClient();
+
+  boshbot.setup = function(controller, defaultChannel = 'general') {
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Hello yourself.`);
     });
@@ -83,6 +89,119 @@ function BoshBot(config) {
 
     controller.hears('takeoff',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Let me know our destination with *'deploy DESTINATION'*.`);
+    });
+
+    controller.updateReleases = function(cb) {
+      var releaseIDs = Object.keys(boshbot.releasesToUpdate).map(function(name) {
+        return boshbot.releasesToUpdate[name].boshio_id;
+      });
+      var releaseNames = Object.keys(boshbot.releasesToUpdate);
+
+      boshioClient.getLatestReleaseVersions(releaseIDs, function(err, boshioVersions) {
+        if (err != null) {
+          cb(err, []);
+          return;
+        }
+
+        runner.getLatestReleaseVersions(function(err, directorVersions) {
+          if (err != null) {
+            cb(err, []);
+            return;
+          }
+
+          var releasesToUpload = Object.keys(boshbot.releasesToUpdate).map(function(releaseName) {
+            var boshioID = boshbot.releasesToUpdate[releaseName].boshio_id;
+            var boshioResult = boshioVersions[boshioID];
+            var directorResult = directorVersions[releaseName] || { version: '0.0.0' };
+
+            if (semver.gt(boshioResult.version, directorResult.version)) {
+              return {
+                name: releaseName,
+                url: boshioResult.url,
+                version: boshioResult.version,
+              };
+            }
+            return null;
+          }).filter(function(element) { return element != null });
+
+          var releaseURLsToUpload = releasesToUpload.map(function(r) { return r.url; });
+          if (releaseURLsToUpload.length == 0) {
+            cb(null, []);
+            return;
+          }
+
+          runner.uploadReleases(releaseURLsToUpload, function(err) {
+            if (err != null) {
+              cb(err, []);
+              return;
+            }
+
+            var releaseNames = releasesToUpload.map(function(release) {
+              return `${release.name} ${release.version}`;
+            });
+
+            cb(null, releaseNames);
+          });
+        });
+      });
+    };
+
+    setInterval(function() {
+      controller.updateReleases(function(err, uploadedReleaseNames) {
+        if (err) {
+          controller.say({
+            text: `Sorry folks, we're experiencing some mechanical difficulties: ${err}.`,
+            channel: defaultChannel,
+          });
+          return;
+        }
+
+        if (uploadedReleaseNames.length == 0) {
+          // say nothing
+          return;
+        }
+
+        var releaseMsg;
+        if (uploadedReleaseNames.length == 1) {
+          releaseMsg = uploadedReleaseNames[0];
+        } else if (uploadedReleaseNames.length == 2) {
+          releaseMsg = `${uploadedReleaseNames[0]} and ${uploadedReleaseNames[1]}`;
+        } else {
+          releaseMsg = `${uploadedReleaseNames.slice(0,-1).join(', ')}, and ${uploadedReleaseNames[-1]}`;
+        }
+
+        controller.say({
+          text: `We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`,
+          channel: defaultChannel,
+        });
+      });
+    }, 60 * 60 * 1000);
+
+    controller.hears('upgrade',['direct_message','direct_mention','mention'],function(bot,message) {
+      bot.reply(message, `<@${message.user}> Let's see if any flight upgrades are available...`);
+      controller.updateReleases(function(err, uploadedReleaseNames) {
+        if (err) {
+          bot.reply(message, `Sorry, we hit a glitch trying to check for upgrades: ${err}.`);
+          return;
+        }
+
+        if (uploadedReleaseNames.length == 0) {
+          bot.reply(message, `I'm sorry, there don't appear to be any upgrades available.`);
+          return;
+        }
+
+        var releaseMsg;
+        if (uploadedReleaseNames.length == 1) {
+          releaseMsg = uploadedReleaseNames[0];
+        } else if (uploadedReleaseNames.length == 2) {
+          releaseMsg = `${uploadedReleaseNames[0]} and ${uploadedReleaseNames[1]}`;
+        } else {
+          releaseMsg = `${uploadedReleaseNames.slice(0,-1).join(', ')}, and ${uploadedReleaseNames[-1]}`;
+        }
+
+        bot.reply(message, `<@${message.user}> We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`);
+        return;
+      });
     });
 
     controller.hears('.*',['direct_message','direct_mention','mention'],function(bot,message) {

@@ -1,18 +1,24 @@
 var expect = require('chai').expect;
 var td = require('testdouble');
 var proxyquire = require('proxyquire');
+var lolex = require("lolex");
 var Readable = require('stream').Readable;
 var ChildProcess = require('child_process').ChildProcess;
 var BoshRunner = require('../src/bosh_runner');
+var BoshioClient = require('../src/boshio_client');
 var TestBot = require('../src/test_bot');
 
 describe('BoshBot', function() {
   var testController;
   var alice;
   var fakeRunner;
+  var fakeBoshio;
   var boshConfig;
+  var fakeClock;
 
   beforeEach(function() {
+    fakeClock = lolex.install();
+
     testController = TestBot();
     testController.spawn();
 
@@ -36,6 +42,7 @@ describe('BoshBot', function() {
     });
 
     fakeRunner = td.object(BoshRunner());
+    fakeBoshio = td.object(BoshioClient());
 
     boshConfig = {
       env: 'https://my-bosh.com',
@@ -45,6 +52,7 @@ describe('BoshBot', function() {
   });
 
   afterEach(function(){
+    fakeClock.uninstall();
     td.reset();
   });
 
@@ -55,6 +63,9 @@ describe('BoshBot', function() {
         expect(runnerConfig.user).to.eql('admin');
         expect(runnerConfig.password).to.eql('fake-password');
         return fakeRunner;
+      },
+      './boshio_client': function() {
+        return fakeBoshio;
       },
     });
 
@@ -290,6 +301,129 @@ Exit code 1`;
           done();
         });
       alice.say('@bot takeoff!');
+    });
+
+    it('uploads new releases to the director on a timer', function() {
+      boshConfig.releases_to_update = {
+        'concourse': {
+          boshio_id: 'github.com/concourse/concourse',
+        },
+        'garden-runc': {
+          boshio_id: 'github.com/cloudfoundry/garden-runc-release',
+        },
+      }
+      spawnBot();
+
+      fakeClock.tick('59:00');
+      expect(testController.response()).to.be.nil;
+
+      var boshioVersions = {
+        'github.com/concourse/concourse': {
+          version: '2.5.0',
+          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
+        },
+        'github.com/cloudfoundry/garden-runc-release': {
+          version: '1.0.4',
+          url: 'https://bosh.io/d/github.com/cloudfoundry/garden-runc-release?v=1.0.4',
+        },
+      }
+      td.when(fakeBoshio.getLatestReleaseVersions(Object.keys(boshioVersions)))
+        .thenCallback(null, boshioVersions);
+
+      var directorVersions = {
+        'concourse': {
+          version: '2.4.0',
+        },
+        'garden-runc': {
+          version: '1.0.4',
+        },
+      }
+      td.when(fakeRunner.getLatestReleaseVersions())
+        .thenCallback(null, directorVersions);
+
+      td.when(fakeRunner.uploadReleases(['https://bosh.io/d/github.com/concourse/concourse?v=2.5.0']))
+        .thenCallback(null);
+      fakeClock.tick('01:01');
+
+      var resp = testController.response();
+      expect(resp, 'no response found').to.not.be.null;
+      expect(resp).to.contain('concourse');
+      expect(resp).to.contain('2.5.0');
+      expect(resp).to.not.contain('garden-runc');
+    });
+
+    it('does not upload releases if no newer versions exist', function() {
+      boshConfig.releases_to_update = {
+        concourse: {
+          boshio_id: 'github.com/concourse/concourse',
+        },
+      }
+      spawnBot();
+
+      var boshioVersions = {
+        'github.com/concourse/concourse': {
+          version: '2.5.0',
+          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
+        },
+      }
+      td.when(fakeBoshio.getLatestReleaseVersions(td.matchers.contains('github.com/concourse/concourse')))
+        .thenCallback(null, boshioVersions);
+
+      var directorVersions = {
+        concourse: {
+          version: '2.5.0',
+        },
+      }
+      td.when(fakeRunner.getLatestReleaseVersions())
+        .thenCallback(null, directorVersions);
+
+      fakeClock.tick('01:00:01');
+
+      var resp = testController.response();
+      expect(resp, 'response found').to.be.null;
+
+      td.verify(fakeRunner.uploadReleases(), {times: 0, ignoreExtraArgs: true})
+    });
+
+    it('checks for new releases on `upgrade`', function() {
+      boshConfig.releases_to_update = {
+        concourse: {
+          boshio_id: 'github.com/concourse/concourse',
+        },
+      }
+      spawnBot();
+
+      var boshioVersions = {
+        'github.com/concourse/concourse': {
+          version: '2.5.0',
+          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
+        },
+      }
+      td.when(fakeBoshio.getLatestReleaseVersions(td.matchers.contains('github.com/concourse/concourse')))
+        .thenCallback(null, boshioVersions);
+
+      var directorVersions = {
+        concourse: {
+          version: '2.4.0',
+        },
+      }
+      td.when(fakeRunner.getLatestReleaseVersions())
+        .thenCallback(null, directorVersions);
+
+      td.when(fakeRunner.uploadReleases(['https://bosh.io/d/github.com/concourse/concourse?v=2.5.0']))
+        .thenCallback(null);
+
+      alice.say('@bot upgrade!');
+
+      var responses = testController.responses();
+      expect(responses[0], 'no response found').to.not.be.null;
+      expect(responses[0]).to.contain('alice');
+      expect(responses[0]).to.contain('upgrades');
+
+      expect(responses[1], 'no response found').to.not.be.null;
+      expect(responses[1]).to.contain('alice');
+      expect(responses[1]).to.contain('concourse');
+      expect(responses[1]).to.contain('2.5.0');
     });
   });
 });
