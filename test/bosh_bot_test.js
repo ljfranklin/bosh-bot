@@ -425,5 +425,48 @@ Exit code 1`;
       expect(responses[1]).to.contain('concourse');
       expect(responses[1]).to.contain('2.5.0');
     });
+
+    it('pulls a public git repo on `deploy`', function(done) {
+      spawnBot();
+
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents,
+      };
+      td.when(fakeRunner.showDiff(expectedDeployOpts))
+        .thenCallback(null, diffPrompt, '');
+
+      alice.say('@bot deploy concourse');
+
+      var diffResponse = testController.response();
+      expect(diffResponse, 'no response found').to.not.be.null;
+      expect(diffResponse).to.contain('@alice');
+      expect(diffResponse).to.contain('stemcells');
+      expect(diffResponse).to.contain('takeoff');
+
+      td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
+        .thenDo(function(_, startCb, endCb) {
+          var cancelCb = td.function('.cancel');
+          startCb('777', cancelCb);
+
+          var deployResponse = testController.response();
+          expect(deployResponse, 'no response found').to.not.be.null;
+          expect(deployResponse).to.contain('@alice');
+          expect(deployResponse).to.contain('bosh task 777');
+
+          endCb(null);
+          var deployEndResponse = testController.response();
+          expect(deployEndResponse, 'no response found').to.not.be.null;
+          expect(deployEndResponse).to.contain('@alice');
+          expect(deployEndResponse).to.contain('successful');
+
+          td.verify(fakeRunner.precheck());
+          td.verify(cancelCb(), {times: 0});
+
+          done();
+        });
+      alice.say('@bot takeoff!');
+    });
   });
 });
