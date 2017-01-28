@@ -9,6 +9,16 @@ function Assets(config = {}) {
 
   var git = GitAsset();
 
+  assets.fetch = function(assetName, assetConfig, cb) {
+    switch(assetConfig.type) {
+      case 'git':
+        git.fetch(assetConfig, path.join(assets.dir, assetName), cb);
+        break;
+      default:
+        cb(new Error(`Unrecognized type '${assetConfig.type}'`));
+    }
+  };
+
   assets.fetchAll = function(assetConfigs, cb) {
     var fetchFuncs = [];
     Object.keys(assetConfigs).forEach(function(assetName) {

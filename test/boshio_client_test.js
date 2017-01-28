@@ -15,8 +15,13 @@ describe('BoshioClient', function() {
 
   describe('#releases', function(){
     it('retrieves the given release versions from boshio', function(done) {
-      client.getLatestReleaseVersions(['github.com/concourse/concourse'], function(_, result) {
-        expect(result.name).to.eql('github.com/concourse/concourse');
+      var id = 'github.com/concourse/concourse';
+      client.getLatestReleaseVersions([id], function(err, results) {
+        expect(err).to.be.null;
+        expect(results).have.all.keys(id);
+
+        var result = results[id];
+        expect(result.name).to.eql(id);
         expect(result.version).to.match(/\d+\.\d+\.\d+.*/);
         expect(result.url).to.include('https');
         done();

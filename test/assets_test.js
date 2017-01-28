@@ -26,6 +26,35 @@ describe('Assets', function() {
     td.reset();
   });
 
+  describe('#fetch', function() {
+    it('fetches an asset of type git', function(done) {
+      var assetConfig = {
+        type: 'git',
+        uri: 'https://fake-git-uri.git',
+      }
+
+      td.when(fakeGitAsset.fetch(assetConfig, `${assetsDir}/deployments`))
+        .thenCallback(null);
+      assets.fetch('deployments', assetConfig, function(err) {
+        expect(err).to.be.null;
+        done();
+      });
+    });
+
+    it('returns an error on unknown type', function(done) {
+      var assetConfig = {
+        type: 'invalid-type',
+        uri: 'https://fake-git-uri.git',
+      }
+
+      assets.fetch('deployments', assetConfig, function(err) {
+        expect(err).to.not.be.null;
+        expect(err.message).to.include('invalid-type');
+        done();
+      });
+    });
+  });
+
   describe('#fetchAll', function() {
     it('fetches all assets', function(done) {
       var assetConfigs = {

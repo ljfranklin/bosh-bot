@@ -141,12 +141,12 @@ describe('BoshBot', function() {
 -   version: '3263.7'
 `;
 
-    var vars_file_contents = `---
-fake_key: fake_value
-`;
+    var bosh_vars = {
+      fake_key: 'fake_value'
+    };
 
     beforeEach(function() {
-      boshConfig.deployments.concourse.vars_file_contents = vars_file_contents;
+      boshConfig.deployments.concourse.vars = bosh_vars;
 
       td.when(fakeAssets.fetchAll(td.matchers.anything()))
         .thenCallback(null);
@@ -158,7 +158,7 @@ fake_key: fake_value
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars_file_contents: vars_file_contents,
+        vars: bosh_vars,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -201,7 +201,7 @@ fake_key: fake_value
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars_file_contents: vars_file_contents,
+        vars: bosh_vars,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -226,7 +226,7 @@ fake_key: fake_value
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars_file_contents: vars_file_contents,
+        vars: bosh_vars,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -246,7 +246,7 @@ fake_key: fake_value
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars_file_contents: vars_file_contents,
+        vars: bosh_vars,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -292,7 +292,7 @@ fake_key: fake_value
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars_file_contents: vars_file_contents,
+        vars: bosh_vars,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -455,7 +455,7 @@ Exit code 1`;
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars_file_contents: vars_file_contents
+        vars: bosh_vars
       };
       // TODO: figure out how to verify these invocations
       td.when(fakeAssets.fetchAll({ concourse: boshConfig.assets.concourse }))
@@ -472,7 +472,7 @@ Exit code 1`;
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars_file_contents: vars_file_contents
+        vars: bosh_vars
       };
 
       td.when(fakeAssets.fetchAll({ concourse: boshConfig.assets.concourse }))

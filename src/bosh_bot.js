@@ -55,10 +55,9 @@ function BoshBot(config) {
         var deployOpts = {
           name: deploymentName,
           manifest_path: boshbot.deployments[deploymentName].manifest_path,
-          vars_file_contents: boshbot.deployments[deploymentName].vars_file_contents,
+          vars: boshbot.deployments[deploymentName].vars,
         };
 
-        console.log('TESTING!')
         runner.showDiff(deployOpts, function(err, stdout, stderr) {
 
           bot.startConversation(message,function(err,convo) {
