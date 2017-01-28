@@ -2,6 +2,7 @@ var semver = require('semver');
 
 var BoshRunner = require('./bosh_runner');
 var BoshioClient = require('./boshio_client');
+var Assets = require('./assets');
 
 function BoshBot(config) {
   var boshbot = {
@@ -10,14 +11,18 @@ function BoshBot(config) {
     password: config.password,
     deployments: config.deployments,
     releasesToUpdate: config.releases_to_update,
+    assets: config.assets,
   }
 
   var runner = BoshRunner(config);
   runner.precheck();
 
   var boshioClient = BoshioClient();
+  var assets = Assets({
+    dir: '/tmp',
+  });
 
-  boshbot.setup = function(controller, defaultChannel = 'general') {
+  boshbot.setup = function(controller, defaultChannel, cb) {
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Hello yourself.`);
     });
@@ -39,50 +44,59 @@ function BoshBot(config) {
         return;
       }
 
-      // TODO: validation, err handling
-      var deployOpts = {
-        name: deploymentName,
-        manifest_path: boshbot.deployments[deploymentName].manifest_path,
-        vars_file_contents: boshbot.deployments[deploymentName].vars_file_contents,
-      };
+      var assetsToFetch = pickKeys(boshbot.assets, boshbot.deployments[deploymentName].assets)
+      assets.fetchAll(assetsToFetch, function(assetsErr) {
+        if (assetsErr) {
+          bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${assetsErr}.`);
+          return;
+        }
 
-      runner.showDiff(deployOpts, function(err, stdout, stderr) {
+        // TODO: validation, err handling
+        var deployOpts = {
+          name: deploymentName,
+          manifest_path: boshbot.deployments[deploymentName].manifest_path,
+          vars_file_contents: boshbot.deployments[deploymentName].vars_file_contents,
+        };
 
-        bot.startConversation(message,function(err,convo) {
+        console.log('TESTING!')
+        runner.showDiff(deployOpts, function(err, stdout, stderr) {
 
-          var prompt = `<@${message.user}> Here's our flight plan for today:\n*${stdout}*\nRespond with *'takeoff'* when you're ready!`;
-          convo.ask(prompt, [{ pattern: 'takeoff', callback: function(response,convo) {
-            var taskID = null;
-            var taskStarted = function(id, cancelCb) {
-              taskID = id;
+          bot.startConversation(message,function(err,convo) {
 
-              var cancelPrompt = `<@${message.user}> We're off! Run \`bosh task ${taskID}\` to track the flight, and respond with *'mayday'* to perform an emergency landing.`;
-              convo.ask(cancelPrompt, [{ pattern: 'mayday', callback: function(response, convo) {
-                convo.say(`<@${message.user}> Hold on tight, this may get a little bumpy...`);
-                cancelCb();
+            var prompt = `<@${message.user}> Here's our flight plan for today:\n*${stdout}*\nRespond with *'takeoff'* when you're ready!`;
+            convo.ask(prompt, [{ pattern: 'takeoff', callback: function(response,convo) {
+              var taskID = null;
+              var taskStarted = function(id, cancelCb) {
+                taskID = id;
+
+                var cancelPrompt = `<@${message.user}> We're off! Run \`bosh task ${taskID}\` to track the flight, and respond with *'mayday'* to perform an emergency landing.`;
+                convo.ask(cancelPrompt, [{ pattern: 'mayday', callback: function(response, convo) {
+                  convo.say(`<@${message.user}> Hold on tight, this may get a little bumpy...`);
+                  cancelCb();
+                  convo.next();
+                }}]);
                 convo.next();
-              }}]);
+              };
+
+              var taskEnded = function(err) {
+                if (err == null) {
+                  bot.reply(message, `<@${message.user}> Another successful landing, the deploy is finished!`);
+                } else if (taskID != null) {
+                  bot.reply(message, `<@${message.user}> Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`);
+                } else {
+                  bot.reply(message, `<@${message.user}> Apologies for the delay folks. We need to fix a mechanical problem before take-off.\nReport: ${err}`);
+                }
+
+                if (convo.isActive()) {
+                  convo.stop();
+                }
+              };
+              runner.deploy(deployOpts, taskStarted, taskEnded);
+            }}, { default: true, callback: function(response, convo) {
+              convo.say(`<@${message.user}> I guess you don't want to *'takeoff'* after all...`);
               convo.next();
-            };
-
-            var taskEnded = function(err) {
-              if (err == null) {
-                bot.reply(message, `<@${message.user}> Another successful landing, the deploy is finished!`);
-              } else if (taskID != null) {
-                bot.reply(message, `<@${message.user}> Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`);
-              } else {
-                bot.reply(message, `<@${message.user}> Apologies for the delay folks. We need to fix a mechanical problem before take-off.\nReport: ${err}`);
-              }
-
-              if (convo.isActive()) {
-                convo.stop();
-              }
-            };
-            runner.deploy(deployOpts, taskStarted, taskEnded);
-          }}, { default: true, callback: function(response, convo) {
-            convo.say(`<@${message.user}> I guess you don't want to *'takeoff'* after all...`);
-            convo.next();
-          }}]);
+            }}]);
+          });
         });
       });
     });
@@ -207,9 +221,19 @@ function BoshBot(config) {
     controller.hears('.*',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Sorry, didn't catch that...`);
     });
+
+    assets.fetchAll(boshbot.assets, cb);
   };
 
   return boshbot;
+}
+
+function pickKeys(obj, keys) {
+  var result = {};
+  keys.forEach(function(key) {
+    result[key] = obj[key];
+  });
+  return result;
 }
 
 module.exports = BoshBot;

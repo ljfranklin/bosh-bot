@@ -7,12 +7,14 @@ var ChildProcess = require('child_process').ChildProcess;
 var BoshRunner = require('../src/bosh_runner');
 var BoshioClient = require('../src/boshio_client');
 var TestBot = require('../src/test_bot');
+var Assets = require('../src/assets');
 
 describe('BoshBot', function() {
   var testController;
   var alice;
   var fakeRunner;
   var fakeBoshio;
+  var fakeAssets;
   var boshConfig;
   var fakeClock;
 
@@ -43,11 +45,28 @@ describe('BoshBot', function() {
 
     fakeRunner = td.object(BoshRunner());
     fakeBoshio = td.object(BoshioClient());
+    fakeAssets = td.object(Assets());
 
     boshConfig = {
       env: 'https://my-bosh.com',
       user: 'admin',
       password: 'fake-password',
+      assets: {
+        concourse: {
+          type: 'git',
+          uri: 'https://fake-repo.git'
+        },
+        unused: {
+          type: 'git',
+          uri: 'https://fake-unused.git'
+        }
+      },
+      deployments: {
+        concourse: {
+          manifest_path: 'fake-manifest.yml',
+          assets: ['concourse']
+        },
+      }
     };
   });
 
@@ -67,10 +86,16 @@ describe('BoshBot', function() {
       './boshio_client': function() {
         return fakeBoshio;
       },
+      './assets': function() {
+        return fakeAssets;
+      },
     });
 
+    td.when(fakeAssets.fetchAll(boshConfig.assets))
+      .thenCallback(null);
+
     var bot = BoshBot(boshConfig);
-    bot.setup(testController)
+    bot.setup(testController, 'general', function() {})
   }
 
   describe('greetings', function(){
@@ -121,12 +146,10 @@ fake_key: fake_value
 `;
 
     beforeEach(function() {
-      boshConfig.deployments = {
-        concourse: {
-          manifest_path: 'fake-manifest.yml',
-          vars_file_contents: vars_file_contents,
-        },
-      }
+      boshConfig.deployments.concourse.vars_file_contents = vars_file_contents;
+
+      td.when(fakeAssets.fetchAll(td.matchers.anything()))
+        .thenCallback(null);
     });
 
     it('starts the deployment', function(done) {
@@ -424,6 +447,41 @@ Exit code 1`;
       expect(responses[1]).to.contain('alice');
       expect(responses[1]).to.contain('concourse');
       expect(responses[1]).to.contain('2.5.0');
+    });
+
+    it('pulls a public git repo on `deploy`', function() {
+      spawnBot();
+
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents
+      };
+      // TODO: figure out how to verify these invocations
+      td.when(fakeAssets.fetchAll({ concourse: boshConfig.assets.concourse }))
+        .thenCallback(null);
+      td.when(fakeRunner.showDiff(expectedDeployOpts))
+        .thenCallback(null, diffPrompt, '');
+
+      alice.say('@bot deploy concourse');
+    });
+
+    it('says an error if fetching asset fails prior to deploy', function() {
+      spawnBot();
+
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars_file_contents: vars_file_contents
+      };
+
+      td.when(fakeAssets.fetchAll({ concourse: boshConfig.assets.concourse }))
+        .thenCallback(new Error('my-fake-error'));
+
+      alice.say('@bot deploy concourse');
+
+      var resp = testController.response();
+      expect(resp).to.contain('my-fake-error');
     });
   });
 });

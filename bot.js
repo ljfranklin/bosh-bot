@@ -29,8 +29,9 @@ var controller = Botkit.slackbot({
 });
 
 var bot = new BoshBot(config.bosh);
-bot.setup(controller);
+bot.setup(controller, 'general', function() {
+  controller.spawn({
+    token: token
+  }).startRTM();
+});
 
-controller.spawn({
-  token: token
-}).startRTM();
