@@ -10,7 +10,7 @@ function BoshBot(config) {
     user: config.user,
     password: config.password,
     deployments: config.deployments,
-    releasesToUpdate: config.releases_to_update,
+    releases: config.releases,
     assets: config.assets,
   }
 
@@ -25,7 +25,6 @@ function BoshBot(config) {
   config.cwd = assetsDir;
   var runner = BoshRunner(config);
   runner.precheck();
-
 
   boshbot.setup = function(controller, defaultChannel, cb) {
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
@@ -112,10 +111,10 @@ function BoshBot(config) {
     });
 
     controller.updateReleases = function(cb) {
-      var releaseIDs = Object.keys(boshbot.releasesToUpdate).map(function(name) {
-        return boshbot.releasesToUpdate[name].boshio_id;
+      var releaseIDs = Object.keys(boshbot.releases).map(function(name) {
+        return boshbot.releases[name].boshio_id;
       });
-      var releaseNames = Object.keys(boshbot.releasesToUpdate);
+      var releaseNames = Object.keys(boshbot.releases);
 
       boshioClient.getLatestReleaseVersions(releaseIDs, function(err, boshioVersions) {
         if (err != null) {
@@ -129,8 +128,8 @@ function BoshBot(config) {
             return;
           }
 
-          var releasesToUpload = Object.keys(boshbot.releasesToUpdate).map(function(releaseName) {
-            var boshioID = boshbot.releasesToUpdate[releaseName].boshio_id;
+          var releasesToUpload = Object.keys(boshbot.releases).map(function(releaseName) {
+            var boshioID = boshbot.releases[releaseName].boshio_id;
             var boshioResult = boshioVersions[boshioID];
             var directorResult = directorVersions[releaseName] || { version: '0.0.0' };
 

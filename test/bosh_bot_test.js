@@ -327,7 +327,7 @@ Exit code 1`;
     });
 
     it('uploads new releases to the director on a timer', function() {
-      boshConfig.releases_to_update = {
+      boshConfig.releases = {
         'concourse': {
           boshio_id: 'github.com/concourse/concourse',
         },
@@ -376,7 +376,7 @@ Exit code 1`;
     });
 
     it('does not upload releases if no newer versions exist', function() {
-      boshConfig.releases_to_update = {
+      boshConfig.releases = {
         concourse: {
           boshio_id: 'github.com/concourse/concourse',
         },
@@ -409,7 +409,7 @@ Exit code 1`;
     });
 
     it('checks for new releases on `upgrade`', function() {
-      boshConfig.releases_to_update = {
+      boshConfig.releases = {
         concourse: {
           boshio_id: 'github.com/concourse/concourse',
         },
