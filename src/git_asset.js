@@ -13,7 +13,7 @@ function GitClient() {
       var shouldUpdateAsset = (err == null);
 
       if (shouldUpdateAsset) {
-        var repo = nil;
+        var repo = null;
         Git.Repository.open(targetDir).then(function(r) {
           repo = r;
           return repo.fetch('origin');
@@ -22,8 +22,9 @@ function GitClient() {
           return repo.getBranchCommit(`origin/${branch}`);
         })
         .then(function(commit) {
-          return Git.Reset.reset(repo, commit, Reset.TYPE.HARD);
+          return Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
         })
+        .then(cb)
         .catch(cb);
       } else {
         Git.Clone(uri, targetDir).then(function() { cb(null); }).catch(cb)

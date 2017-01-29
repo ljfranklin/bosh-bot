@@ -25,7 +25,7 @@ function Assets(config = {}) {
       fetchFuncs.push(function(nestedCb) {
         assets.fetch(assetName, assetConfigs[assetName], nestedCb);
       });
-    })
+    });
     async.parallel(fetchFuncs, cb);
   };
 

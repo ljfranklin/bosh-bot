@@ -1,18 +1,19 @@
 var yaml = require('js-yaml');
+var fs = require('fs');
 var Botkit = require('botkit');
 var BoshBot = require('./src/bosh_bot');
 
 console.log('Spinning up...');
 
-var rawConfig = process.env.BOSH_BOT_CONFIG;
-if (!rawConfig) {
+var configPath = process.env.BOSH_BOT_CONFIG;
+if (!configPath) {
   // TODO: show example format or steps
   console.error('Error: Set BOSH_BOT_CONFIG in your environment.');
   process.exit(1);
 }
 
 // TODO: config validation
-var config = yaml.safeLoad(rawConfig);
+var config = yaml.safeLoad(fs.readFileSync(configPath, 'utf8'));
 
 // TODO: verify all manifest paths exist
 

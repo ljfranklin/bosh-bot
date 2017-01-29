@@ -18,6 +18,7 @@ function BoshBot(config) {
   runner.precheck();
 
   var boshioClient = BoshioClient();
+  // TODO: random tmp dir?
   var assets = Assets({
     dir: '/tmp',
   });
