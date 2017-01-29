@@ -14,14 +14,18 @@ function BoshBot(config) {
     assets: config.assets,
   }
 
+  // TODO: random tmp dir?
+  var assetsDir = '/tmp';
+
+  var boshioClient = BoshioClient();
+  var assets = Assets({
+    dir: assetsDir,
+  });
+
+  config.cwd = assetsDir;
   var runner = BoshRunner(config);
   runner.precheck();
 
-  var boshioClient = BoshioClient();
-  // TODO: random tmp dir?
-  var assets = Assets({
-    dir: '/tmp',
-  });
 
   boshbot.setup = function(controller, defaultChannel, cb) {
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
@@ -59,11 +63,13 @@ function BoshBot(config) {
           vars: boshbot.deployments[deploymentName].vars,
         };
 
-        runner.showDiff(deployOpts, function(err, stdout, stderr) {
+        runner.showDiff(deployOpts, function(err, diffOutput) {
+          // TODO: check for error
 
           bot.startConversation(message,function(err,convo) {
+            // TODO: check err
 
-            var prompt = `<@${message.user}> Here's our flight plan for today:\n*${stdout}*\nRespond with *'takeoff'* when you're ready!`;
+            var prompt = `<@${message.user}> Here's our flight plan for today:\n*${diffOutput}*\nRespond with *'takeoff'* when you're ready!`;
             convo.ask(prompt, [{ pattern: 'takeoff', callback: function(response,convo) {
               var taskID = null;
               var taskStarted = function(id, cancelCb) {

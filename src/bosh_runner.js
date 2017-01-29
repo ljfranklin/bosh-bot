@@ -6,19 +6,23 @@ var yaml = require('js-yaml');
 var async = require('async');
 
 function BoshRunner(config = {}) {
-  var runner = {};
-
-  var boshEnv = {
-    BOSH_ENVIRONMENT: config.env,
-    BOSH_USER:        config.user,
-    BOSH_PASSWORD:    config.password,
-    PATH:             process.env.PATH,
+  var runner = {
+    cwd: config.cwd,
   };
 
+  var boshEnv = {
+    BOSH_ENVIRONMENT:   config.env,
+    BOSH_CLIENT:        config.user,
+    BOSH_CLIENT_SECRET: config.password,
+    PATH:               process.env.PATH,
+    HOME:               process.env.HOME,
+  };
+
+  var diffPrompt = 'Continue?.*'
   var patternsToRemoveFromOutput = [
     'Using environment .*',
     'Using deployment .*',
-    'Continue?.*',
+    diffPrompt,
   ];
 
   runner.precheck = function() {
@@ -29,9 +33,9 @@ function BoshRunner(config = {}) {
 
   runner.getLatestReleaseVersions = function(cb) {
     console.log('Checking for Director release versions...');
-    exec('bosh releases --json', { env: boshEnv }, function(err, stdout, stderr) {
+    exec('bosh releases --json', { cwd: runner.cwd, env: boshEnv }, function(err, stdout, stderr) {
       if (err) {
-        cb(new Error(`Error retrieving releases from Director: ${err}. ${stderr}`), {});
+        cb(new Error(`Error retrieving releases from Director: ${err}.\nSTDOUT: ${stdout}\nSTDERR: ${stderr}`), {});
         return;
       }
 
@@ -61,7 +65,7 @@ function BoshRunner(config = {}) {
 
   runner.uploadRelease = function(url, cb) {
     console.log(`Uploading release '${url}' to Director...`);
-    exec(`bosh -n upload-release ${url}`, { env: boshEnv }, function(err, _, stderr) {
+    exec(`bosh -n upload-release ${url}`, { cwd: runner.cwd, env: boshEnv }, function(err, _, stderr) {
       if (err) {
         cb(new Error(`Error uploading release: ${err}. ${stderr}`));
         return;
@@ -101,6 +105,7 @@ function BoshRunner(config = {}) {
     }
     boshCmd += ` ${manifest_path}`;
     var boshProcess = spawn('bash', ['-c', boshCmd], {
+      cwd: runner.cwd,
       env: boshEnv,
       timeout: 20000,
       stdin: stdin,
@@ -121,8 +126,14 @@ function BoshRunner(config = {}) {
     boshProcess.on('error', function(err) {
       cb(err, filterOutput(stdout), stderr);
     });
-    boshProcess.on('close', function(_) {
-      cb(null, filterOutput(stdout), stderr);
+    boshProcess.on('close', function(err) {
+      var diffSucceeded = stdout.match(diffPrompt);
+      if (diffSucceeded) {
+        cb(null, filterOutput(stdout), stderr);
+      } else {
+        var err = new Error(`Failed to run 'bosh diff'. STDOUT: ${stdout}\nSTDERR: ${stderr}`);
+        cb(err, stdout, stderr);
+      }
     });
   };
 
@@ -141,6 +152,7 @@ function BoshRunner(config = {}) {
     }
     boshCmd += ` ${manifest_path}`;
     var boshProcess = spawn('bash', ['-c', boshCmd], {
+      cwd: runner.cwd,
       env: boshEnv,
     });
 
@@ -175,7 +187,7 @@ function BoshRunner(config = {}) {
   };
 
   function cancelTask(taskID) {
-    exec(`bosh cancel-task ${taskID}`, { env: boshEnv }, function(err, stdout, stderr) {
+    exec(`bosh cancel-task ${taskID}`, { cwd: runner.cwd, env: boshEnv }, function(err, stdout, stderr) {
       if (err) {
         console.log(`Error canceling task ${taskID}: ${err}`);
       } else {
