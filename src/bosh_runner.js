@@ -93,6 +93,7 @@ function BoshRunner(config = {}) {
       name,
       manifest_path,
       vars,
+      var_files,
     } = opts;
 
     var stdin = new Readable();
@@ -103,6 +104,12 @@ function BoshRunner(config = {}) {
         boshCmd += ` -v '${key}=${JSON.stringify(vars[key])}'`
       });
     }
+    if (var_files) {
+      Object.keys(var_files).forEach(function(key) {
+        boshCmd += ` --var-file '${key}=${var_files[key]}'`
+      });
+    }
+
     boshCmd += ` ${manifest_path}`;
     var boshProcess = spawn('bash', ['-c', boshCmd], {
       cwd: runner.cwd,
@@ -142,6 +149,7 @@ function BoshRunner(config = {}) {
       name,
       manifest_path,
       vars,
+      var_files,
     } = opts;
 
     var boshCmd = `bosh -n --no-color --tty deploy -d '${name}'`;
@@ -150,6 +158,12 @@ function BoshRunner(config = {}) {
         boshCmd += ` -v '${key}=${JSON.stringify(vars[key])}'`
       });
     }
+    if (var_files) {
+      Object.keys(var_files).forEach(function(key) {
+        boshCmd += ` --var-file '${key}=${var_files[key]}'`
+      });
+    }
+
     boshCmd += ` ${manifest_path}`;
     var boshProcess = spawn('bash', ['-c', boshCmd], {
       cwd: runner.cwd,

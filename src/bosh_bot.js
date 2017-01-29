@@ -60,6 +60,7 @@ function BoshBot(config) {
           name: deploymentName,
           manifest_path: boshbot.deployments[deploymentName].manifest_path,
           vars: boshbot.deployments[deploymentName].vars,
+          var_files: boshbot.deployments[deploymentName].var_files,
         };
 
         runner.showDiff(deployOpts, function(err, diffOutput) {

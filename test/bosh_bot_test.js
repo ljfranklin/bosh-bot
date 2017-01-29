@@ -145,8 +145,13 @@ describe('BoshBot', function() {
       fake_key: 'fake_value'
     };
 
+    var bosh_var_files = {
+      fake_file: 'fake_path'
+    };
+
     beforeEach(function() {
       boshConfig.deployments.concourse.vars = bosh_vars;
+      boshConfig.deployments.concourse.var_files = bosh_var_files;
 
       td.when(fakeAssets.fetchAll(td.matchers.anything()))
         .thenCallback(null);
@@ -455,7 +460,8 @@ Exit code 1`;
       var expectedDeployOpts = {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
-        vars: bosh_vars
+        vars: bosh_vars,
+        var_files: bosh_var_files,
       };
       // TODO: figure out how to verify these invocations
       td.when(fakeAssets.fetchAll({ concourse: boshConfig.assets.concourse }))
@@ -468,12 +474,6 @@ Exit code 1`;
 
     it('says an error if fetching asset fails prior to deploy', function() {
       spawnBot();
-
-      var expectedDeployOpts = {
-        name: 'concourse',
-        manifest_path: 'fake-manifest.yml',
-        vars: bosh_vars
-      };
 
       td.when(fakeAssets.fetchAll({ concourse: boshConfig.assets.concourse }))
         .thenCallback(new Error('my-fake-error'));
