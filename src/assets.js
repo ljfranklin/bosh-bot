@@ -10,9 +10,18 @@ function Assets(config = {}) {
   var git = GitAsset();
 
   assets.fetch = function(assetName, assetConfig, cb) {
+    console.log(`Fetching ${assetName}...`);
+
     switch(assetConfig.type) {
       case 'git':
-        git.fetch(assetConfig, path.join(assets.dir, assetName), cb);
+        git.fetch(assetConfig, path.join(assets.dir, assetName), function(err) {
+          if (err) {
+            console.log(`Failed fetching ${assetName}: ${err}`);
+          } else {
+            console.log(`Done fetching ${assetName}.`);
+          }
+          cb(err);
+        });
         break;
       default:
         cb(new Error(`Unrecognized type '${assetConfig.type}'`));

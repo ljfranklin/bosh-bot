@@ -30,9 +30,15 @@ var controller = Botkit.slackbot({
 });
 
 var bot = new BoshBot(config.bosh);
-bot.setup(controller, 'general', function() {
+bot.setup(controller, 'general', function(err) {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+
   controller.spawn({
     token: token
   }).startRTM();
+  console.log('Ready for connections!');
 });
 

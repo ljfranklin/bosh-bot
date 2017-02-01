@@ -26,7 +26,7 @@ function BoshBot(config) {
   var runner = BoshRunner(config);
   runner.precheck();
 
-  boshbot.setup = function(controller, defaultChannel, cb) {
+  boshbot.setup = function(controller, defaultChannel, setupCb) {
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Hello yourself.`);
     });
@@ -228,7 +228,7 @@ function BoshBot(config) {
       bot.reply(message, `<@${message.user}> Sorry, didn't catch that...`);
     });
 
-    assets.fetchAll(boshbot.assets, cb);
+    assets.fetchAll(boshbot.assets, setupCb);
   };
 
   return boshbot;
