@@ -164,6 +164,7 @@ describe('BoshBot', function() {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
+        var_files: bosh_var_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -207,6 +208,7 @@ describe('BoshBot', function() {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
+        var_files: bosh_var_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -232,6 +234,7 @@ describe('BoshBot', function() {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
+        var_files: bosh_var_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -252,6 +255,7 @@ describe('BoshBot', function() {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
+        var_files: bosh_var_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -298,6 +302,7 @@ describe('BoshBot', function() {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
+        var_files: bosh_var_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
