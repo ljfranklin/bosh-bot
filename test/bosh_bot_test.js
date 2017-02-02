@@ -171,6 +171,9 @@ describe('BoshBot', function() {
 
       alice.say('@bot deploy concourse');
 
+      var assetResponse = testController.response();
+      expect(assetResponse, 'no response found').to.not.be.null;
+
       var diffResponse = testController.response();
       expect(diffResponse, 'no response found').to.not.be.null;
       expect(diffResponse).to.contain('@alice');
@@ -215,6 +218,8 @@ describe('BoshBot', function() {
 
       alice.say('@bot deploy concourse');
 
+      var assetResponse = testController.response();
+      expect(assetResponse, 'no response found').to.not.be.null;
       var diffResponse = testController.response();
       expect(diffResponse, 'no response found').to.not.be.null;
 
@@ -262,6 +267,8 @@ describe('BoshBot', function() {
 
       alice.say('@bot deploy concourse');
 
+      var assetResponse = testController.response();
+      expect(assetResponse, 'no response found').to.not.be.null;
       var diffResponse = testController.response();
       expect(diffResponse, 'no response found').to.not.be.null;
 
@@ -324,7 +331,7 @@ Expected manifest to specify deployment name 'fake-name' but was 'concourse'
 Exit code 1`;
           endCb(new Error(errMessage));
 
-          var deployEndResponse = testController.response();
+          var deployEndResponse = testController.responses().pop();
           expect(deployEndResponse, 'no response found').to.not.be.null;
           expect(deployEndResponse).to.contain('@alice');
           expect(deployEndResponse).to.contain(errMessage);
@@ -475,6 +482,10 @@ Exit code 1`;
         .thenCallback(null, diffPrompt, '');
 
       alice.say('@bot deploy concourse');
+
+      var responses = testController.responses();
+      expect(responses[0], 'no response found').to.not.be.null;
+      expect(responses[0]).to.contain('assets');
     });
 
     it('says an error if fetching asset fails prior to deploy', function() {
@@ -485,7 +496,7 @@ Exit code 1`;
 
       alice.say('@bot deploy concourse');
 
-      var resp = testController.response();
+      var resp = testController.responses().pop();
       expect(resp).to.contain('my-fake-error');
     });
   });

@@ -49,6 +49,9 @@ function BoshBot(config) {
       }
 
       var assetsToFetch = pickKeys(boshbot.assets, boshbot.deployments[deploymentName].assets)
+      if (Object.keys(assetsToFetch).length > 0) {
+        bot.reply(message, `<@${message.user}> Give us a minute to load your assets onto the plane...`);
+      }
       assets.fetchAll(assetsToFetch, function(assetsErr) {
         if (assetsErr) {
           bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${assetsErr}.`);
