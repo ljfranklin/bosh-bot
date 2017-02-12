@@ -1,4 +1,5 @@
 var semver = require('semver');
+var async = require('async');
 
 var BoshRunner = require('./bosh_runner');
 var BoshioClient = require('./boshio_client');
@@ -10,7 +11,9 @@ function BoshBot(config) {
     user: config.user,
     password: config.password,
     deployments: config.deployments,
-    releases: config.releases,
+    // TODO: change releases to an array
+    releases: config.releases || {},
+    stemcells: config.stemcells || [],
     assets: config.assets,
   }
 
@@ -115,6 +118,11 @@ function BoshBot(config) {
     });
 
     controller.updateReleases = function(cb) {
+      if (Object.keys(boshbot.releases).length == 0) {
+        cb(null, []);
+        return;
+      }
+
       var releaseIDs = Object.keys(boshbot.releases).map(function(name) {
         return boshbot.releases[name].boshio_id;
       });
@@ -137,6 +145,13 @@ function BoshBot(config) {
             var boshioResult = boshioVersions[boshioID];
             var directorResult = directorVersions[releaseName] || { version: '0.0.0' };
 
+            // TODO: cleanup semver matching
+            while (boshioResult.version.match(/\./g).length < 2) {
+              boshioResult.version += '.0';
+            }
+            while (directorResult.version.match(/\./g).length < 2) {
+              directorResult.version += '.0';
+            }
             if (semver.gt(boshioResult.version, directorResult.version)) {
               return {
                 name: releaseName,
@@ -169,8 +184,80 @@ function BoshBot(config) {
       });
     };
 
+    controller.updateStemcells = function(cb) {
+      if (boshbot.stemcells.length == 0) {
+        cb(null, []);
+        return;
+      }
+
+      var stemcellIDs = boshbot.stemcells.map(function(stemcell) {
+        return stemcell.boshio_id;
+      });
+
+      boshioClient.getLatestStemcellVersions(stemcellIDs, function(err, boshioVersions) {
+        if (err != null) {
+          cb(err, []);
+          return;
+        }
+
+        runner.getLatestStemcellVersions(function(err, directorVersions) {
+          if (err != null) {
+            cb(err, []);
+            return;
+          }
+
+          var stemcellsToUpload = boshbot.stemcells.map(function(stemcell) {
+            var boshioID = stemcell.boshio_id;
+            var boshioResult = boshioVersions[boshioID];
+            var directorResult = directorVersions[boshioID] || { version: '0.0.0' };
+
+            // TODO: cleanup semver matching
+            boshioVersion = boshioResult.version;
+            while (boshioVersion.match(/\./g).length < 2) {
+              boshioVersion += '.0';
+            }
+            directorVersion = directorResult.version;
+            while (directorVersion.match(/\./g).length < 2) {
+              directorVersion += '.0';
+            }
+            if (semver.gt(boshioVersion, directorVersion)) {
+              return {
+                name: boshioResult.name,
+                url: boshioResult.url,
+                version: boshioResult.version,
+              };
+            }
+            return null;
+          }).filter(function(element) { return element != null });
+
+          var stemcellURLsToUpload = stemcellsToUpload.map(function(r) { return r.url; });
+          if (stemcellURLsToUpload.length == 0) {
+            cb(null, []);
+            return;
+          }
+
+          runner.uploadStemcells(stemcellURLsToUpload, function(err) {
+            if (err != null) {
+              cb(err, []);
+              return;
+            }
+
+            var stemcellNames = stemcellsToUpload.map(function(stemcell) {
+              return `${stemcell.name} ${stemcell.version}`;
+            });
+
+            cb(null, stemcellNames);
+          });
+        });
+      });
+    };
+
     setInterval(function() {
-      controller.updateReleases(function(err, uploadedReleaseNames) {
+      async.parallel([
+        controller.updateReleases,
+        controller.updateStemcells,
+      ],
+      function(err, results) {
         if (err) {
           controller.say({
             text: `Sorry folks, we're experiencing some mechanical difficulties: ${err}.`,
@@ -179,18 +266,19 @@ function BoshBot(config) {
           return;
         }
 
-        if (uploadedReleaseNames.length == 0) {
+        var uploadedItems = results[0].concat(results[1]);
+        if (uploadedItems.length == 0) {
           // say nothing
           return;
         }
 
         var releaseMsg;
-        if (uploadedReleaseNames.length == 1) {
-          releaseMsg = uploadedReleaseNames[0];
-        } else if (uploadedReleaseNames.length == 2) {
-          releaseMsg = `${uploadedReleaseNames[0]} and ${uploadedReleaseNames[1]}`;
+        if (uploadedItems.length == 1) {
+          releaseMsg = uploadedItems[0];
+        } else if (uploadedItems.length == 2) {
+          releaseMsg = `${uploadedItems[0]} and ${uploadedItems[1]}`;
         } else {
-          releaseMsg = `${uploadedReleaseNames.slice(0,-1).join(', ')}, and ${uploadedReleaseNames[-1]}`;
+          releaseMsg = `${uploadedItems.slice(0,-1).join(', ')}, and ${uploadedItems[-1]}`;
         }
 
         controller.say({
@@ -202,24 +290,29 @@ function BoshBot(config) {
 
     controller.hears('upgrade',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Let's see if any flight upgrades are available...`);
-      controller.updateReleases(function(err, uploadedReleaseNames) {
+      async.parallel([
+        controller.updateReleases,
+        controller.updateStemcells,
+      ],
+      function(err, results) {
         if (err) {
           bot.reply(message, `<@${message.user}> Sorry, we hit a glitch trying to check for upgrades: ${err}.`);
           return;
         }
 
-        if (uploadedReleaseNames.length == 0) {
+        var uploadedItems = results[0].concat(results[1]);
+        if (uploadedItems.length == 0) {
           bot.reply(message, `<@${message.user}> I'm sorry, there don't appear to be any upgrades available.`);
           return;
         }
 
         var releaseMsg;
-        if (uploadedReleaseNames.length == 1) {
-          releaseMsg = uploadedReleaseNames[0];
-        } else if (uploadedReleaseNames.length == 2) {
-          releaseMsg = `${uploadedReleaseNames[0]} and ${uploadedReleaseNames[1]}`;
+        if (uploadedItems.length == 1) {
+          releaseMsg = uploadedItems[0];
+        } else if (uploadedItems.length == 2) {
+          releaseMsg = `${uploadedItems[0]} and ${uploadedItems[1]}`;
         } else {
-          releaseMsg = `${uploadedReleaseNames.slice(0,-1).join(', ')}, and ${uploadedReleaseNames[-1]}`;
+          releaseMsg = `${uploadedItems.slice(0,-1).join(', ')}, and ${uploadedItems[-1]}`;
         }
 
         bot.reply(message, `<@${message.user}> We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`);

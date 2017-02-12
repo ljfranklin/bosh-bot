@@ -456,6 +456,7 @@ Exit code 1`;
       alice.say('@bot upgrade!');
 
       var responses = testController.responses();
+      expect(responses.length).to.equal(2);
       expect(responses[0], 'no response found').to.not.be.null;
       expect(responses[0]).to.contain('alice');
       expect(responses[0]).to.contain('upgrades');
@@ -464,6 +465,125 @@ Exit code 1`;
       expect(responses[1]).to.contain('alice');
       expect(responses[1]).to.contain('concourse');
       expect(responses[1]).to.contain('2.5.0');
+    });
+
+    it('uploads new stemcells to the director on a timer', function() {
+      boshConfig.stemcells = [
+        {
+          boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
+        },
+      ];
+      boshConfig.releases = {};
+      spawnBot();
+
+      fakeClock.tick('59:00');
+      expect(testController.response()).to.be.nil;
+
+      var boshioVersions = {
+        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+          name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
+          version: '3312.17',
+          url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
+        },
+      }
+      td.when(fakeBoshio.getLatestStemcellVersions(td.matchers.contains('bosh-aws-xen-hvm-ubuntu-trusty-go_agent')))
+        .thenCallback(null, boshioVersions);
+
+      var directorVersions = {
+        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+          version: '3312.16',
+        },
+      }
+      td.when(fakeRunner.getLatestStemcellVersions())
+        .thenCallback(null, directorVersions);
+
+      td.when(fakeRunner.uploadStemcells(['https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz']))
+        .thenCallback(null);
+      fakeClock.tick('01:01');
+
+      var resp = testController.response();
+      expect(resp, 'no response found').to.not.be.null;
+      expect(resp).to.contain('bosh-aws-xen-hvm-ubuntu-trusty-go_agent');
+      expect(resp).to.contain('3312.17');
+    });
+
+    it('does not upload stemcells if no newer versions exist', function() {
+      boshConfig.stemcells = [
+        {
+          boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
+        },
+      ];
+      boshConfig.releases = {};
+      spawnBot();
+
+      var boshioVersions = {
+        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+          name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
+          version: '3312.17',
+          url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
+        },
+      }
+      td.when(fakeBoshio.getLatestStemcellVersions(td.matchers.contains('bosh-aws-xen-hvm-ubuntu-trusty-go_agent')))
+        .thenCallback(null, boshioVersions);
+
+      var directorVersions = {
+        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+          version: '3312.17',
+        },
+      }
+      td.when(fakeRunner.getLatestStemcellVersions())
+        .thenCallback(null, directorVersions);
+
+      fakeClock.tick('01:00:01');
+
+      var resp = testController.response();
+      expect(resp, 'response found').to.be.null;
+
+      td.verify(fakeRunner.uploadStemcells(), {times: 0, ignoreExtraArgs: true})
+    });
+
+    it('checks for new stemcells on `upgrade`', function() {
+      boshConfig.stemcells = [
+        {
+          boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
+        },
+      ];
+      boshConfig.releases = {};
+      spawnBot();
+
+      var boshioVersions = {
+        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+          name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
+          version: '3312.17',
+          url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
+        },
+      }
+      td.when(fakeBoshio.getLatestStemcellVersions(td.matchers.contains('bosh-aws-xen-hvm-ubuntu-trusty-go_agent')))
+        .thenCallback(null, boshioVersions);
+
+      var directorVersions = {
+        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+          version: '3312.16',
+        },
+      }
+      td.when(fakeRunner.getLatestStemcellVersions())
+        .thenCallback(null, directorVersions);
+
+      td.when(fakeRunner.uploadStemcells(['https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz']))
+        .thenCallback(null);
+
+      alice.say('@bot upgrade!');
+
+      var responses = testController.responses();
+      expect(responses.length).to.eql(2);
+      expect(responses[0], 'no response found').to.not.be.null;
+      expect(responses[0]).to.contain('alice');
+      expect(responses[0]).to.contain('upgrades');
+
+      expect(responses[1], 'no response found').to.not.be.null;
+      expect(responses[1]).to.contain('alice');
+      expect(responses[1]).to.contain('aws');
+      expect(responses[1]).to.contain('3312.17');
     });
 
     it('pulls a public git repo on `deploy`', function() {

@@ -88,6 +88,63 @@ function BoshRunner(config = {}) {
     });
   };
 
+  runner.getLatestStemcellVersions = function(cb) {
+    console.log('Checking for Director stemcell versions...');
+    exec('bosh stemcells --json', { cwd: runner.cwd, env: boshEnv }, function(err, stdout, stderr) {
+      if (err) {
+        cb(new Error(`Error retrieving stemcells from Director: ${err}.\nSTDOUT: ${stdout}\nSTDERR: ${stderr}`), {});
+        return;
+      }
+
+      var cmdOutput = yaml.safeLoad(stdout);
+      if (cmdOutput.Tables == null || cmdOutput.length == 0) {
+        cb(new Error(`Expected key 'Tables' in stemcells output, but didn't find it: ${stdout}`), {});
+        return;
+      }
+
+      var results = cmdOutput.Tables[0].Rows;
+      var stemcells = {};
+      results.forEach(function(tuple) {
+        // assumes first element has the highest version
+        var name = tuple[0];
+        var version = tuple[1].replace('*', ''); // remove 'in-use' indicator
+        if (!stemcells.hasOwnProperty(name))  {
+          console.log(`Director has version '${version}' of '${name}'`);
+          stemcells[name] = {
+            version: version,
+          };
+        }
+      });
+
+      cb(null, stemcells);
+    });
+  };
+
+  runner.uploadStemcell = function(url, cb) {
+    console.log(`Uploading stemcell '${url}' to Director...`);
+    exec(`bosh -n upload-stemcell ${url}`, { cwd: runner.cwd, env: boshEnv }, function(err, _, stderr) {
+      if (err) {
+        cb(new Error(`Error uploading stemcell: ${err}. ${stderr}`));
+        return;
+      }
+
+      console.log(`Successfully uploaded stemcell '${url}' to Director!`);
+      cb(null);
+    });
+  };
+
+  runner.uploadStemcells = function(stemcellURLs, cb) {
+    var uploadFuncs = [];
+    stemcellURLs.forEach(function(url) {
+      uploadFuncs.push(function(cb) {
+        runner.uploadStemcell(url, cb);
+      });
+    });
+    async.parallel(uploadFuncs, function(err) {
+      cb(err)
+    });
+  };
+
   runner.showDiff = function(opts, cb) {
     var {
       name,
