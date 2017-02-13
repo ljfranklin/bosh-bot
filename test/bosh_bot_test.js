@@ -344,14 +344,16 @@ Exit code 1`;
     });
 
     it('uploads new releases to the director on a timer', function() {
-      boshConfig.releases = {
-        'concourse': {
+      boshConfig.releases = [
+        {
+          name: 'concourse',
           boshio_id: 'github.com/concourse/concourse',
         },
-        'garden-runc': {
+        {
+          name: 'garden-runc',
           boshio_id: 'github.com/cloudfoundry/garden-runc-release',
         },
-      }
+      ];
       spawnBot();
 
       fakeClock.tick('59:00');
@@ -393,11 +395,12 @@ Exit code 1`;
     });
 
     it('does not upload releases if no newer versions exist', function() {
-      boshConfig.releases = {
-        concourse: {
+      boshConfig.releases = [
+        {
+          name: 'concourse',
           boshio_id: 'github.com/concourse/concourse',
         },
-      }
+      ];
       spawnBot();
 
       var boshioVersions = {
@@ -426,11 +429,12 @@ Exit code 1`;
     });
 
     it('checks for new releases on `upgrade`', function() {
-      boshConfig.releases = {
-        concourse: {
+      boshConfig.releases = [
+        {
+          name: 'concourse',
           boshio_id: 'github.com/concourse/concourse',
         },
-      }
+      ];
       spawnBot();
 
       var boshioVersions = {
@@ -473,7 +477,7 @@ Exit code 1`;
           boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
         },
       ];
-      boshConfig.releases = {};
+      boshConfig.releases = [];
       spawnBot();
 
       fakeClock.tick('59:00');
@@ -513,7 +517,7 @@ Exit code 1`;
           boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
         },
       ];
-      boshConfig.releases = {};
+      boshConfig.releases = [];
       spawnBot();
 
       var boshioVersions = {
@@ -548,7 +552,7 @@ Exit code 1`;
           boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
         },
       ];
-      boshConfig.releases = {};
+      boshConfig.releases = [];
       spawnBot();
 
       var boshioVersions = {

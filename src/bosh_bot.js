@@ -12,7 +12,7 @@ function BoshBot(config) {
     password: config.password,
     deployments: config.deployments,
     // TODO: change releases to an array
-    releases: config.releases || {},
+    releases: config.releases || [],
     stemcells: config.stemcells || [],
     assets: config.assets,
   }
@@ -118,16 +118,14 @@ function BoshBot(config) {
     });
 
     controller.updateReleases = function(cb) {
-      if (Object.keys(boshbot.releases).length == 0) {
+      if (boshbot.releases.length == 0) {
         cb(null, []);
         return;
       }
 
-      var releaseIDs = Object.keys(boshbot.releases).map(function(name) {
-        return boshbot.releases[name].boshio_id;
+      var releaseIDs = boshbot.releases.map(function(release) {
+        return release.boshio_id;
       });
-      var releaseNames = Object.keys(boshbot.releases);
-
       boshioClient.getLatestReleaseVersions(releaseIDs, function(err, boshioVersions) {
         if (err != null) {
           cb(err, []);
@@ -140,10 +138,10 @@ function BoshBot(config) {
             return;
           }
 
-          var releasesToUpload = Object.keys(boshbot.releases).map(function(releaseName) {
-            var boshioID = boshbot.releases[releaseName].boshio_id;
+          var releasesToUpload = boshbot.releases.map(function(release) {
+            var boshioID = release.boshio_id;
             var boshioResult = boshioVersions[boshioID];
-            var directorResult = directorVersions[releaseName] || { version: '0.0.0' };
+            var directorResult = directorVersions[release.name] || { version: '0.0.0' };
 
             // TODO: cleanup semver matching
             while (boshioResult.version.match(/\./g).length < 2) {
@@ -154,7 +152,7 @@ function BoshBot(config) {
             }
             if (semver.gt(boshioResult.version, directorResult.version)) {
               return {
-                name: releaseName,
+                name: release.name,
                 url: boshioResult.url,
                 version: boshioResult.version,
               };
