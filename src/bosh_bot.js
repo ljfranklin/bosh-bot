@@ -13,7 +13,7 @@ function BoshBot(config) {
     deployments: config.deployments || [],
     releases: config.releases || [],
     stemcells: config.stemcells || [],
-    assets: config.assets,
+    assets: config.assets || [],
   }
 
   // TODO: random tmp dir?
@@ -54,8 +54,10 @@ function BoshBot(config) {
         return;
       }
 
-      var assetsToFetch = pickKeys(boshbot.assets, deployment.assets)
-      if (Object.keys(assetsToFetch).length > 0) {
+      var assetsToFetch = deployment.assets.map(function(assetName) {
+        return boshbot.assets.find(function(a) { return a.name == assetName });
+      });
+      if (assetsToFetch.length > 0) {
         bot.reply(message, `<@${message.user}> Give us a minute to load your assets onto the plane...`);
       }
       assets.fetchAll(assetsToFetch, function(assetsErr) {
@@ -329,14 +331,6 @@ function BoshBot(config) {
   };
 
   return boshbot;
-}
-
-function pickKeys(obj, keys) {
-  var result = {};
-  keys.forEach(function(key) {
-    result[key] = obj[key];
-  });
-  return result;
 }
 
 module.exports = BoshBot;

@@ -9,16 +9,16 @@ function Assets(config = {}) {
 
   var git = GitAsset();
 
-  assets.fetch = function(assetName, assetConfig, cb) {
-    console.log(`Fetching ${assetName}...`);
+  assets.fetch = function(assetConfig, cb) {
+    console.log(`Fetching ${assetConfig.name}...`);
 
     switch(assetConfig.type) {
       case 'git':
-        git.fetch(assetConfig, path.join(assets.dir, assetName), function(err) {
+        git.fetch(assetConfig, path.join(assets.dir, assetConfig.name), function(err) {
           if (err) {
-            console.log(`Failed fetching ${assetName}: ${err}`);
+            console.log(`Failed fetching ${assetConfig.name}: ${err}`);
           } else {
-            console.log(`Done fetching ${assetName}.`);
+            console.log(`Done fetching ${assetConfig.name}.`);
           }
           cb(err);
         });
@@ -30,9 +30,9 @@ function Assets(config = {}) {
 
   assets.fetchAll = function(assetConfigs, cb) {
     var fetchFuncs = [];
-    Object.keys(assetConfigs).forEach(function(assetName) {
+    assetConfigs.forEach(function(asset) {
       fetchFuncs.push(function(nestedCb) {
-        assets.fetch(assetName, assetConfigs[assetName], nestedCb);
+        assets.fetch(asset, nestedCb);
       });
     });
     async.parallel(fetchFuncs, cb);

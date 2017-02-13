@@ -51,16 +51,18 @@ describe('BoshBot', function() {
       env: 'https://my-bosh.com',
       user: 'admin',
       password: 'fake-password',
-      assets: {
-        concourse: {
+      assets: [
+        {
+          name: 'concourse',
           type: 'git',
           uri: 'https://fake-repo.git'
         },
-        unused: {
+        {
+          name: 'unused',
           type: 'git',
           uri: 'https://fake-unused.git'
         }
-      },
+      ],
       deployments: [
         {
           name: 'concourse',
@@ -616,7 +618,10 @@ Exit code 1`;
     it('says an error if fetching asset fails prior to deploy', function() {
       spawnBot();
 
-      td.when(fakeAssets.fetchAll({ concourse: boshConfig.assets.concourse }))
+      var expectedAssets = boshConfig.assets.filter(function(a) {
+        return a.name == 'concourse';
+      });
+      td.when(fakeAssets.fetchAll(expectedAssets))
         .thenCallback(new Error('my-fake-error'));
 
       alice.say('@bot deploy concourse');

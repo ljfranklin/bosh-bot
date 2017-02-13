@@ -29,13 +29,14 @@ describe('Assets', function() {
   describe('#fetch', function() {
     it('fetches an asset of type git', function(done) {
       var assetConfig = {
+        name: 'deployments',
         type: 'git',
         uri: 'https://fake-git-uri.git',
-      }
+      };
 
       td.when(fakeGitAsset.fetch(assetConfig, `${assetsDir}/deployments`))
         .thenCallback(null);
-      assets.fetch('deployments', assetConfig, function(err) {
+      assets.fetch(assetConfig, function(err) {
         expect(err).to.be.null;
         done();
       });
@@ -43,11 +44,12 @@ describe('Assets', function() {
 
     it('returns an error on unknown type', function(done) {
       var assetConfig = {
+        name: 'deployments',
         type: 'invalid-type',
         uri: 'https://fake-git-uri.git',
-      }
+      };
 
-      assets.fetch('deployments', assetConfig, function(err) {
+      assets.fetch(assetConfig, function(err) {
         expect(err).to.not.be.null;
         expect(err.message).to.include('invalid-type');
         done();
@@ -57,20 +59,22 @@ describe('Assets', function() {
 
   describe('#fetchAll', function() {
     it('fetches all assets', function(done) {
-      var assetConfigs = {
-        first: {
+      var assetConfigs = [
+        {
+          name: 'first',
           type: 'git',
           uri: 'https://first.git'
         },
-        second: {
+        {
+          name: 'second',
           type: 'git',
           uri: 'https://second.git'
         }
-      };
+      ];
 
-      td.when(fakeGitAsset.fetch(assetConfigs['first'], `${assetsDir}/first`))
+      td.when(fakeGitAsset.fetch(assetConfigs[0], `${assetsDir}/first`))
         .thenCallback(null);
-      td.when(fakeGitAsset.fetch(assetConfigs['second'], `${assetsDir}/second`))
+      td.when(fakeGitAsset.fetch(assetConfigs[1], `${assetsDir}/second`))
         .thenCallback(null);
 
       assets.fetchAll(assetConfigs, function(err) {
@@ -80,16 +84,18 @@ describe('Assets', function() {
     });
 
     it('returns an error on unknown type', function(done) {
-      var assetConfigs = {
-        first: {
+      var assetConfigs = [
+        {
+          name: 'first',
           type: 'git',
           uri: 'https://first.git'
         },
-        second: {
+        {
+          name: 'second',
           type: 'invalid-type',
           uri: 'https://second.git'
         }
-      };
+      ];
 
       assets.fetchAll(assetConfigs, function(err) {
         expect(err).to.not.be.null;
