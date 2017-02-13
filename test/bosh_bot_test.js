@@ -61,12 +61,13 @@ describe('BoshBot', function() {
           uri: 'https://fake-unused.git'
         }
       },
-      deployments: {
-        concourse: {
+      deployments: [
+        {
+          name: 'concourse',
           manifest_path: 'fake-manifest.yml',
           assets: ['concourse']
         },
-      }
+      ],
     };
   });
 
@@ -150,8 +151,8 @@ describe('BoshBot', function() {
     };
 
     beforeEach(function() {
-      boshConfig.deployments.concourse.vars = bosh_vars;
-      boshConfig.deployments.concourse.var_files = bosh_var_files;
+      boshConfig.deployments[0].vars = bosh_vars;
+      boshConfig.deployments[0].var_files = bosh_var_files;
 
       td.when(fakeAssets.fetchAll(td.matchers.anything()))
         .thenCallback(null);

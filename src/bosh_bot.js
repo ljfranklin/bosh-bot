@@ -10,8 +10,7 @@ function BoshBot(config) {
     env: config.env,
     user: config.user,
     password: config.password,
-    deployments: config.deployments,
-    // TODO: change releases to an array
+    deployments: config.deployments || [],
     releases: config.releases || [],
     stemcells: config.stemcells || [],
     assets: config.assets,
@@ -45,13 +44,17 @@ function BoshBot(config) {
     controller.hears('deploy ([a-zA-Z0-9\-\_]+)',['direct_message','direct_mention','mention'],function(bot,message) {
       var deploymentName = message.match[1];
 
-      if (boshbot.deployments.hasOwnProperty(deploymentName) == false) {
-        var knownDeploymentNames = Object.keys(boshbot.deployments).map(function(val) { return `*${val}*`; });
+      var deployment = boshbot.deployments.find(function(d) {
+        return (d.name == deploymentName);
+      });
+
+      if (deployment == null) {
+        var knownDeploymentNames = boshbot.deployments.map(function(d) { return `*${d.name}*`; });
         bot.reply(message, `<@${message.user}> I'm afraid my navigator doesn't know the destination *${deploymentName}*. The destinations we know about are: ${knownDeploymentNames.join(', ')}.`);
         return;
       }
 
-      var assetsToFetch = pickKeys(boshbot.assets, boshbot.deployments[deploymentName].assets)
+      var assetsToFetch = pickKeys(boshbot.assets, deployment.assets)
       if (Object.keys(assetsToFetch).length > 0) {
         bot.reply(message, `<@${message.user}> Give us a minute to load your assets onto the plane...`);
       }
@@ -64,9 +67,9 @@ function BoshBot(config) {
         // TODO: validation, err handling
         var deployOpts = {
           name: deploymentName,
-          manifest_path: boshbot.deployments[deploymentName].manifest_path,
-          vars: boshbot.deployments[deploymentName].vars,
-          var_files: boshbot.deployments[deploymentName].var_files,
+          manifest_path: deployment.manifest_path,
+          vars: deployment.vars,
+          var_files: deployment.var_files,
         };
 
         runner.showDiff(deployOpts, function(err, diffOutput) {
