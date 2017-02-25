@@ -35,6 +35,7 @@ bot.setup(controller, 'general', function(err) {
 
   controller.spawn({
     token: config.get('slack.token'),
+    retry: Infinity,
   }).startRTM();
   console.log('Ready for connections!');
 });
