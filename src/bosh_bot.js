@@ -281,7 +281,7 @@ function BoshBot(config) {
         } else if (uploadedItems.length == 2) {
           releaseMsg = `${uploadedItems[0]} and ${uploadedItems[1]}`;
         } else {
-          releaseMsg = `${uploadedItems.slice(0,-1).join(', ')}, and ${uploadedItems[-1]}`;
+          releaseMsg = `${uploadedItems.slice(0,-1).join(', ')}, and ${uploadedItems[uploadedItems.length - 1]}`;
         }
 
         controller.say({
@@ -315,7 +315,7 @@ function BoshBot(config) {
         } else if (uploadedItems.length == 2) {
           releaseMsg = `${uploadedItems[0]} and ${uploadedItems[1]}`;
         } else {
-          releaseMsg = `${uploadedItems.slice(0,-1).join(', ')}, and ${uploadedItems[-1]}`;
+          releaseMsg = `${uploadedItems.slice(0,-1).join(', ')}, and ${uploadedItems[uploadedItems.length - 1]}`;
         }
 
         bot.reply(message, `<@${message.user}> We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`);
