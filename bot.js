@@ -2,6 +2,7 @@ var yaml = require('js-yaml');
 var fs = require('fs');
 var Botkit = require('botkit');
 var BoshBot = require('./src/bosh_bot');
+var Config = require('./src/config');
 
 console.log('Spinning up...');
 
@@ -12,14 +13,10 @@ if (!configPath) {
   process.exit(1);
 }
 
-// TODO: config validation
-var config = yaml.safeLoad(fs.readFileSync(configPath, 'utf8'));
-
-// TODO: verify all manifest paths exist
-
-var token = config.slack.token;
-if (!token) {
-  console.error('Error: Set `slack.token` in your config. Info: https://api.slack.com/bot-users');
+var config = Config(configPath);
+var loadErr = config.loadSync();
+if (loadErr) {
+  console.error(`Invalid Config: ${loadErr}`);
   process.exit(1);
 }
 
@@ -29,7 +26,7 @@ var controller = Botkit.slackbot({
   retry: 10
 });
 
-var bot = new BoshBot(config.bosh);
+var bot = new BoshBot(config.get('bosh'));
 bot.setup(controller, 'general', function(err) {
   if (err) {
     console.error(err);
@@ -37,7 +34,7 @@ bot.setup(controller, 'general', function(err) {
   }
 
   controller.spawn({
-    token: token
+    token: config.get('slack.token'),
   }).startRTM();
   console.log('Ready for connections!');
 });
