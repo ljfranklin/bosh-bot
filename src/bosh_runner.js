@@ -18,6 +18,10 @@ function BoshRunner(config = {}) {
     HOME:               process.env.HOME,
   };
 
+  if (config.ca_cert) {
+    boshEnv.BOSH_CA_CERT = config.ca_cert;
+  }
+
   var diffPrompt = 'Continue?.*'
   var patternsToRemoveFromOutput = [
     'Using environment .*',
