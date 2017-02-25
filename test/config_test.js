@@ -76,6 +76,13 @@ describe('BoshBot', function() {
     it('returns nested properties', function() {
       expect(config.get('slack.token')).to.eq('fake-token');
     });
+
+    it('returns default values if no value is provided', function() {
+      expect(config.get('bosh.releases')).to.eql([]);
+      expect(config.get('bosh.stemcells')).to.eql([]);
+      expect(config.get('bosh.deployments')).to.eql([]);
+      expect(config.get('bosh.assets')).to.eql([]);
+    });
   });
 
   function writeConfig(config) {

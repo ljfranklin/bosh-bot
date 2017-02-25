@@ -11,6 +11,14 @@ function Config(configPath) {
     'bosh.user',
     'bosh.password',
   ];
+  var defaultContents = {
+    bosh: {
+      releases: [],
+      stemcells: [],
+      deployments: [],
+      assets: [],
+    },
+  };
 
   config.loadSync = function() {
     try {
@@ -18,6 +26,10 @@ function Config(configPath) {
     } catch(ex) {
       return new Error(`Failed to load config file at '${configPath}': ${ex}`);
     }
+
+    Object.keys(defaultContents).forEach(function(key) {
+      contents[key] = Object.assign(defaultContents[key], contents[key]);
+    });
 
     return validate();
   };
