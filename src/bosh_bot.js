@@ -66,7 +66,6 @@ function BoshBot(config) {
           return;
         }
 
-        // TODO: validation, err handling
         var deployOpts = {
           name: deploymentName,
           manifest_path: deployment.manifest_path,
@@ -75,10 +74,16 @@ function BoshBot(config) {
         };
 
         runner.showDiff(deployOpts, function(err, diffOutput) {
-          // TODO: check for error
+          if (err) {
+            bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${err}.`);
+            return;
+          }
 
           bot.startConversation(message,function(err,convo) {
-            // TODO: check err
+            if (err) {
+              bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${err}.`);
+              return;
+            }
 
             var prompt = `<@${message.user}> Here's our flight plan for today:\n*${diffOutput}*\nRespond with *'takeoff'* when you're ready!`;
             convo.ask(prompt, [{ pattern: 'takeoff', callback: function(response,convo) {
