@@ -463,7 +463,7 @@ Exit code 1`;
       alice.say('@bot upgrade!');
 
       var responses = testController.responses();
-      expect(responses.length).to.equal(2);
+      expect(responses.length).to.equal(3);
       expect(responses[0], 'no response found').to.not.be.null;
       expect(responses[0]).to.contain('alice');
       expect(responses[0]).to.contain('upgrades');
@@ -472,6 +472,10 @@ Exit code 1`;
       expect(responses[1]).to.contain('alice');
       expect(responses[1]).to.contain('concourse');
       expect(responses[1]).to.contain('2.5.0');
+
+      expect(responses[2], 'no response found').to.not.be.null;
+      expect(responses[2]).to.contain('alice');
+      expect(responses[2]).to.contain('upgraded');
     });
 
     it('uploads new stemcells to the director on a timer', function() {
@@ -582,7 +586,7 @@ Exit code 1`;
       alice.say('@bot upgrade!');
 
       var responses = testController.responses();
-      expect(responses.length).to.eql(2);
+      expect(responses.length).to.eql(3);
       expect(responses[0], 'no response found').to.not.be.null;
       expect(responses[0]).to.contain('alice');
       expect(responses[0]).to.contain('upgrades');
@@ -591,6 +595,10 @@ Exit code 1`;
       expect(responses[1]).to.contain('alice');
       expect(responses[1]).to.contain('aws');
       expect(responses[1]).to.contain('3312.17');
+
+      expect(responses[2], 'no response found').to.not.be.null;
+      expect(responses[2]).to.contain('alice');
+      expect(responses[2]).to.contain('upgraded');
     });
 
     it('pulls a public git repo on `deploy`', function() {

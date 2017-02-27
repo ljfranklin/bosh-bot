@@ -127,7 +127,7 @@ function BoshBot(config) {
       bot.reply(message, `<@${message.user}> Let me know our destination with *'deploy DESTINATION'*.`);
     });
 
-    controller.updateReleases = function(cb) {
+    controller.getReleasesToUpdate = function(cb) {
       if (boshbot.releases.length == 0) {
         cb(null, []);
         return;
@@ -165,34 +165,40 @@ function BoshBot(config) {
                 name: release.name,
                 url: boshioResult.url,
                 version: boshioResult.version,
+                displayName: `${release.name} ${boshioResult.version}`,
               };
             }
             return null;
           }).filter(function(element) { return element != null });
 
-          var releaseURLsToUpload = releasesToUpload.map(function(r) { return r.url; });
-          if (releaseURLsToUpload.length == 0) {
-            cb(null, []);
-            return;
-          }
-
-          runner.uploadReleases(releaseURLsToUpload, function(err) {
-            if (err != null) {
-              cb(err, []);
-              return;
-            }
-
-            var releaseNames = releasesToUpload.map(function(release) {
-              return `${release.name} ${release.version}`;
-            });
-
-            cb(null, releaseNames);
-          });
+          cb(null, releasesToUpload);
         });
       });
     };
 
-    controller.updateStemcells = function(cb) {
+    controller.updateReleases = function(releasesToUpload, cb) {
+      if (releasesToUpload.length == 0) {
+        cb(null, []);
+        return;
+      }
+
+      var releaseURLsToUpload = releasesToUpload.map(function(r) { return r.url; });
+      if (releaseURLsToUpload.length == 0) {
+        cb(null, []);
+        return;
+      }
+
+      runner.uploadReleases(releaseURLsToUpload, function(err) {
+        if (err != null) {
+          cb(err, []);
+          return;
+        }
+
+        cb(null, releasesToUpload);
+      });
+    };
+
+    controller.getStemcellsToUpdate = function(cb) {
       if (boshbot.stemcells.length == 0) {
         cb(null, []);
         return;
@@ -233,37 +239,54 @@ function BoshBot(config) {
                 name: boshioResult.name,
                 url: boshioResult.url,
                 version: boshioResult.version,
+                displayName: `${boshioResult.name} ${boshioResult.version}`,
               };
             }
             return null;
           }).filter(function(element) { return element != null });
 
-          var stemcellURLsToUpload = stemcellsToUpload.map(function(r) { return r.url; });
-          if (stemcellURLsToUpload.length == 0) {
-            cb(null, []);
-            return;
-          }
-
-          runner.uploadStemcells(stemcellURLsToUpload, function(err) {
-            if (err != null) {
-              cb(err, []);
-              return;
-            }
-
-            var stemcellNames = stemcellsToUpload.map(function(stemcell) {
-              return `${stemcell.name} ${stemcell.version}`;
-            });
-
-            cb(null, stemcellNames);
-          });
+          cb(null, stemcellsToUpload);
         });
+      });
+    };
+
+    controller.updateStemcells = function(stemcellsToUpload, cb) {
+      var stemcellURLsToUpload = stemcellsToUpload.map(function(r) { return r.url; });
+      if (stemcellURLsToUpload.length == 0) {
+        cb(null, []);
+        return;
+      }
+
+      runner.uploadStemcells(stemcellURLsToUpload, function(err) {
+        if (err != null) {
+          cb(err, []);
+          return;
+        }
+
+        cb(null, stemcellsToUpload);
       });
     };
 
     setInterval(function() {
       async.parallel([
-        controller.updateReleases,
-        controller.updateStemcells,
+        function(cb) {
+          controller.getReleasesToUpdate(function(err, releasesToUpdate) {
+            if (err) {
+              cb(err);
+              return;
+            }
+            controller.updateReleases(releasesToUpdate, cb);
+          });
+        },
+        function(cb) {
+          controller.getStemcellsToUpdate(function(err, stemcellsToUpdate) {
+            if (err) {
+              cb(err);
+              return;
+            }
+            controller.updateStemcells(stemcellsToUpdate, cb);
+          });
+        },
       ],
       function(err, results) {
         if (err) {
@@ -274,7 +297,7 @@ function BoshBot(config) {
           return;
         }
 
-        var uploadedItems = results[0].concat(results[1]);
+        var uploadedItems = results[0].concat(results[1]).map(function(r) { return r.displayName });
         if (uploadedItems.length == 0) {
           // say nothing
           return;
@@ -299,8 +322,8 @@ function BoshBot(config) {
     controller.hears('upgrade',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Let's see if any flight upgrades are available...`);
       async.parallel([
-        controller.updateReleases,
-        controller.updateStemcells,
+        controller.getReleasesToUpdate,
+        controller.getStemcellsToUpdate,
       ],
       function(err, results) {
         if (err) {
@@ -308,7 +331,10 @@ function BoshBot(config) {
           return;
         }
 
-        var uploadedItems = results[0].concat(results[1]);
+        var releasesToUpload = results[0];
+        var stemcellsToUpload = results[1];
+
+        var uploadedItems = releasesToUpload.concat(stemcellsToUpload).map(function(r) { return r.displayName });
         if (uploadedItems.length == 0) {
           bot.reply(message, `<@${message.user}> I'm sorry, there don't appear to be any upgrades available.`);
           return;
@@ -323,7 +349,19 @@ function BoshBot(config) {
           releaseMsg = `${uploadedItems.slice(0,-1).join(', ')}, and ${uploadedItems[uploadedItems.length - 1]}`;
         }
 
-        bot.reply(message, `<@${message.user}> We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`);
+        bot.reply(message, `<@${message.user}> You're in luck! We have upgrades available for ${releaseMsg}. Give me a minute to set that up...`);
+
+        async.parallel([
+          function(cb) {
+            controller.updateReleases(releasesToUpload, cb);
+          },
+          function(cb) {
+            controller.updateStemcells(stemcellsToUpload, cb);
+          },
+        ], function(err, _) {
+          bot.reply(message, `<@${message.user}> Your tickets have been upgraded! Board the plane by telling me 'deploy DESTINATION'.`);
+        });
+
         return;
       });
     });
