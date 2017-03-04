@@ -155,6 +155,8 @@ function BoshRunner(config = {}) {
       manifest_path,
       vars,
       var_files,
+      vars_files,
+      ops_files,
     } = opts;
 
     var stdin = new Readable();
@@ -168,6 +170,16 @@ function BoshRunner(config = {}) {
     if (var_files) {
       Object.keys(var_files).forEach(function(key) {
         boshCmd += ` --var-file '${key}=${var_files[key]}'`
+      });
+    }
+    if (vars_files) {
+      Object.keys(vars_files).forEach(function(key) {
+        boshCmd += ` --vars-file '${key}=${vars_files[key]}'`
+      });
+    }
+    if (ops_files) {
+      Object.keys(ops_files).forEach(function(key) {
+        boshCmd += ` --ops-file '${key}=${ops_files[key]}'`
       });
     }
 
@@ -211,6 +223,8 @@ function BoshRunner(config = {}) {
       manifest_path,
       vars,
       var_files,
+      vars_files,
+      ops_files,
     } = opts;
 
     var boshCmd = `bosh -n --no-color --tty deploy -d '${name}'`;
@@ -222,6 +236,16 @@ function BoshRunner(config = {}) {
     if (var_files) {
       Object.keys(var_files).forEach(function(key) {
         boshCmd += ` --var-file '${key}=${var_files[key]}'`
+      });
+    }
+    if (vars_files) {
+      Object.keys(vars_files).forEach(function(key) {
+        boshCmd += ` --vars-file '${key}=${vars_files[key]}'`
+      });
+    }
+    if (ops_files) {
+      Object.keys(ops_files).forEach(function(key) {
+        boshCmd += ` --ops-file '${key}=${ops_files[key]}'`
       });
     }
 

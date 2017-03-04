@@ -71,6 +71,8 @@ function BoshBot(config) {
           manifest_path: deployment.manifest_path,
           vars: deployment.vars,
           var_files: deployment.var_files,
+          vars_files: deployment.vars_files,
+          ops_files: deployment.ops_files,
         };
 
         runner.showDiff(deployOpts, function(err, diffOutput) {

@@ -147,14 +147,21 @@ describe('BoshBot', function() {
     var bosh_vars = {
       fake_key: 'fake_value'
     };
-
     var bosh_var_files = {
-      fake_file: 'fake_path'
+      fake_var_file: 'fake_var_path'
+    };
+    var bosh_vars_files = {
+      fake_vars_file: 'fake_vars_path'
+    };
+    var bosh_ops_files = {
+      fake_ops_file: 'fake_ops_path'
     };
 
     beforeEach(function() {
       boshConfig.deployments[0].vars = bosh_vars;
       boshConfig.deployments[0].var_files = bosh_var_files;
+      boshConfig.deployments[0].vars_files = bosh_vars_files;
+      boshConfig.deployments[0].ops_files = bosh_ops_files;
 
       td.when(fakeAssets.fetchAll(td.matchers.anything()))
         .thenCallback(null);
@@ -168,6 +175,8 @@ describe('BoshBot', function() {
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
         var_files: bosh_var_files,
+        vars_files: bosh_vars_files,
+        ops_files: bosh_ops_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -215,6 +224,8 @@ describe('BoshBot', function() {
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
         var_files: bosh_var_files,
+        vars_files: bosh_vars_files,
+        ops_files: bosh_ops_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -243,6 +254,8 @@ describe('BoshBot', function() {
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
         var_files: bosh_var_files,
+        vars_files: bosh_vars_files,
+        ops_files: bosh_ops_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -264,6 +277,8 @@ describe('BoshBot', function() {
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
         var_files: bosh_var_files,
+        vars_files: bosh_vars_files,
+        ops_files: bosh_ops_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -313,6 +328,8 @@ describe('BoshBot', function() {
         manifest_path: 'fake-manifest.yml',
         vars: bosh_vars,
         var_files: bosh_var_files,
+        vars_files: bosh_vars_files,
+        ops_files: bosh_ops_files,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
