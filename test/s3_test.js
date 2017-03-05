@@ -14,7 +14,8 @@ describe('S3', function() {
     objectBucket = process.env.BOSH_BOT_S3_BUCKET;
     var accessKey = process.env.BOSH_BOT_S3_ACCESS_KEY;
     var secretKey = process.env.BOSH_BOT_S3_SECRET_KEY;
-    var endpoint = process.env.BOSH_BOT_S3_ENDPOINT || 's3.amazonaws.com';
+    var endpoint = process.env.BOSH_BOT_S3_ENDPOINT;
+    var region = process.env.BOSH_BOT_S3_REGION;
 
     if (!objectBucket) {
       throw new Error('Missing required env variable BOSH_BOT_S3_BUCKET');
@@ -25,6 +26,9 @@ describe('S3', function() {
     if (!secretKey) {
       throw new Error('Missing required env variable BOSH_BOT_S3_SECRET_KEY');
     }
+    if (!endpoint && !region) {
+      throw new Error('Must specify either BOSH_BOT_S3_ENDPOINT or BOSH_BOT_S3_REGION');
+    }
 
     localPath = `/tmp/${randomString()}`;
 
@@ -32,12 +36,14 @@ describe('S3', function() {
       accessKey: accessKey,
       secretKey: secretKey,
       endpoint:  endpoint,
+      region:    region,
     });
 
     s3Helper = new AWS.S3({
       accessKeyId:     accessKey,
       secretAccessKey: secretKey,
       endpoint:        endpoint,
+      region:          region,
     });
   });
 

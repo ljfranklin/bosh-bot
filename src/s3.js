@@ -10,13 +10,25 @@ function NotFoundError(message) {
 function createClient(opts) {
   var client = {};
 
-  var s3 = new AWS.S3({
+  var awsOpts = {
     accessKeyId:     opts.accessKey,
     secretAccessKey: opts.secretKey,
-    endpoint:        opts.endpoint,
-  });
+  };
+  if (opts.region) {
+    awsOpts.region = opts.region;
+  }
+  if (opts.endpoint) {
+    awsOpts.endpoint = opts.endpoint;
+  }
+
+  var s3 = new AWS.S3(awsOpts);
 
   client.upload = function(params, cb) {
+    if (!opts.endpoint && !opts.region) {
+      cb(new Error('Must specify either S3 region or S3 endpoint.'));
+      return;
+    }
+
     var awsParams = {
       Bucket: params.bucket,
       Key: params.key,
@@ -32,6 +44,11 @@ function createClient(opts) {
   };
 
   client.download = function(params, cb) {
+    if (!opts.endpoint && !opts.region) {
+      cb(new Error('Must specify either S3 region or S3 endpoint.'));
+      return;
+    }
+
     var awsParams = {
       Bucket: params.bucket,
       Key: params.key,

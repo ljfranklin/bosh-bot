@@ -395,6 +395,7 @@ function BoshRunner(config = {}) {
       accessKey: config.access_key,
       secretKey: config.secret_key,
       endpoint:  config.endpoint,
+      region:    config.region,
     });
 
     var downloadParams = {
@@ -416,6 +417,7 @@ function BoshRunner(config = {}) {
       accessKey: config.access_key,
       secretKey: config.secret_key,
       endpoint:  config.endpoint,
+      region:    config.region,
     });
 
     var uploadParams = {
