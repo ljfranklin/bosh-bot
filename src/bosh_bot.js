@@ -73,6 +73,7 @@ function BoshBot(config) {
           var_files: deployment.var_files,
           vars_files: deployment.vars_files,
           ops_files: deployment.ops_files,
+          vars_store: deployment.vars_store,
         };
 
         runner.showDiff(deployOpts, function(err, diffOutput) {
@@ -102,14 +103,20 @@ function BoshBot(config) {
                 convo.next();
               };
 
-              var taskEnded = function(err) {
+              var taskEnded = function(err, shouldRedact) {
+                var response;
                 if (err == null) {
-                  bot.reply(message, `<@${message.user}> Another successful landing, the deploy is finished!`);
+                  response = `Another successful landing, the deploy is finished!`;
                 } else if (taskID != null) {
-                  bot.reply(message, `<@${message.user}> Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`);
+                  response = `Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`;
                 } else {
-                  bot.reply(message, `<@${message.user}> Apologies for the delay folks. We need to fix a mechanical problem before take-off.\nReport: ${err}`);
+                  response = 'Apologies for the delay folks. We need to fix a mechanical problem before take-off.';
                 }
+                if (err && shouldRedact == false) {
+                  response += `\nReport: ${err}`
+                }
+
+                bot.reply(message, `<@${message.user}> ${response}`);
 
                 if (convo.isActive()) {
                   convo.stop();

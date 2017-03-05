@@ -1,9 +1,10 @@
 var spawnSync = require('child_process').spawnSync;
-var spawn = require('child_process').spawn;
-var exec = require('child_process').exec;
+var spawn = require('child_process').spawn; var exec = require('child_process').exec;
+var fs = require('fs');
 var Readable = require('stream').Readable;
 var yaml = require('js-yaml');
 var async = require('async');
+var S3 = require('./s3');
 
 function BoshRunner(config = {}) {
   var runner = {
@@ -157,10 +158,13 @@ function BoshRunner(config = {}) {
       var_files,
       vars_files,
       ops_files,
+      vars_store,
     } = opts;
 
     var stdin = new Readable();
 
+    var setupCbs = [];
+    var cleanupCbs = [];
     var boshCmd = `bosh --no-color --tty deploy -d '${name}'`;
     if (vars) {
       Object.keys(vars).forEach(function(key) {
@@ -182,38 +186,71 @@ function BoshRunner(config = {}) {
         boshCmd += ` --ops-file '${key}=${ops_files[key]}'`
       });
     }
+    if (vars_store) {
+      // TODO: random tmp dir
+      var varsStorePath = `/tmp/vars-store-${name}`;
+      boshCmd += ` --vars-store ${varsStorePath}`;
 
+      setupCbs.push(function(cb) {
+        downloadVarsStore(vars_store, varsStorePath, cb);
+      });
+      cleanupCbs.push(function(cb) {
+        fs.unlink(varsStorePath, function(_) {
+          cb(null);
+        });
+      });
+    }
     boshCmd += ` ${manifest_path}`;
-    var boshProcess = spawn('bash', ['-c', boshCmd], {
-      cwd: runner.cwd,
-      env: boshEnv,
-      timeout: 20000,
-      stdin: stdin,
-    });
 
-    boshProcess.stdin.write('no');
-    boshProcess.stdin.end();
+    var runCmd = function(nestedCb) {
+      var boshProcess = spawn('bash', ['-c', boshCmd], {
+        cwd: runner.cwd,
+        env: boshEnv,
+        timeout: 20000,
+        stdin: stdin,
+      });
 
-    var stdout = '';
-    var stderr = '';
-    boshProcess.stdout.on('data', function(out) {
-      stdout += out.toString();
-    });
-    boshProcess.stderr.on('data', function(out) {
-      stderr += out.toString();
-    });
+      boshProcess.stdin.write('no');
+      boshProcess.stdin.end();
 
-    boshProcess.on('error', function(err) {
-      cb(err, filterOutput(stdout), stderr);
-    });
-    boshProcess.on('close', function(err) {
-      var diffSucceeded = stdout.match(diffPrompt);
-      if (diffSucceeded) {
-        cb(null, filterOutput(stdout), stderr);
-      } else {
-        var err = new Error(`Failed to run 'bosh diff'. STDOUT: ${stdout}\nSTDERR: ${stderr}`);
-        cb(err, stdout, stderr);
+      var stdout = '';
+      var stderr = '';
+      boshProcess.stdout.on('data', function(out) {
+        stdout += out.toString();
+      });
+      boshProcess.stderr.on('data', function(out) {
+        stderr += out.toString();
+      });
+
+      boshProcess.on('error', function(err) {
+        nestedCb(err, filterOutput(stdout), stderr);
+      });
+      boshProcess.on('close', function(err) {
+        var diffSucceeded = stdout.match(diffPrompt);
+        if (diffSucceeded) {
+          nestedCb(null, filterOutput(stdout), stderr);
+        } else {
+          var err = new Error(`Failed to run 'bosh diff'. STDOUT: ${stdout}\nSTDERR: ${stderr}`);
+          nestedCb(err, stdout, stderr);
+        }
+      });
+    };
+
+    async.parallel(setupCbs, function(err, _) {
+      if (err) {
+        cb(err, null, null);
+        return;
       }
+
+      runCmd(function(err, stdout, stderr) {
+        async.parallel(cleanupCbs, function(err) {
+          if (err) {
+            cb(err, null, null);
+            return;
+          }
+          cb(err, stdout, stderr);
+        });
+      });
     });
   };
 
@@ -225,8 +262,11 @@ function BoshRunner(config = {}) {
       var_files,
       vars_files,
       ops_files,
+      vars_store,
     } = opts;
 
+    var setupCbs = [];
+    var cleanupCbs = [];
     var boshCmd = `bosh -n --no-color --tty deploy -d '${name}'`;
     if (vars) {
       Object.keys(vars).forEach(function(key) {
@@ -248,40 +288,84 @@ function BoshRunner(config = {}) {
         boshCmd += ` --ops-file '${key}=${ops_files[key]}'`
       });
     }
+    if (vars_store) {
+      // TODO: random tmp dir
+      var varsStorePath = `/tmp/vars-store-${name}`;
+      boshCmd += ` --vars-store ${varsStorePath}`;
 
+      setupCbs.push(function(cb) {
+        downloadVarsStore(vars_store, varsStorePath, cb);
+      });
+      cleanupCbs.push(function(cb) {
+        uploadVarsStore(vars_store, varsStorePath, function(err) {
+          fs.unlink(varsStorePath, function(_) {
+            cb(err);
+          });
+        });
+      });
+    }
     boshCmd += ` ${manifest_path}`;
-    var boshProcess = spawn('bash', ['-c', boshCmd], {
-      cwd: runner.cwd,
-      env: boshEnv,
-    });
 
-    var taskNumber = null;
-    var boshOutput = '';
-    boshProcess.stdout.on('data', function(out) {
-      boshOutput += out.toString();
+    var runCmd = function(nestedCb) {
+      var boshProcess = spawn('bash', ['-c', boshCmd], {
+        cwd: runner.cwd,
+        env: boshEnv,
+      });
 
-      matches = out.toString().match(/Task ([0-9]+)/i)
-      if (taskNumber == null && matches) {
-        taskNumber = matches[1];
-        var cancelCb = function() {
-          cancelTask(taskNumber);
-        };
-        taskStartCb(taskNumber, cancelCb);
+      var taskNumber = null;
+      var boshOutput = '';
+      boshProcess.stdout.on('data', function(out) {
+        boshOutput += out.toString();
+
+        matches = out.toString().match(/Task ([0-9]+)/i)
+        if (taskNumber == null && matches) {
+          taskNumber = matches[1];
+          var cancelCb = function() {
+            cancelTask(taskNumber);
+          };
+          taskStartCb(taskNumber, cancelCb);
+        }
+      });
+      boshProcess.stderr.on('data', function(out) {
+        boshOutput += out.toString();
+      });
+
+      boshProcess.on('error', function(err) {
+        nestedCb(err);
+      });
+      boshProcess.on('close', function(exitCode) {
+        if (exitCode == 0) {
+          nestedCb(null);
+        } else {
+          nestedCb(new Error(boshOutput));
+        }
+      });
+    };
+
+    async.parallel(setupCbs, function(err, _) {
+      if (err) {
+        taskEndedCb(err);
+        return;
       }
-    });
-    boshProcess.stderr.on('data', function(out) {
-      boshOutput += out.toString();
-    });
 
-    boshProcess.on('error', function(err) {
-      taskEndedCb(err);
-    });
-    boshProcess.on('close', function(exitCode) {
-      if (exitCode == 0) {
-        taskEndedCb(null);
-      } else {
-        taskEndedCb(new Error(boshOutput));
-      }
+      runCmd(function(runErr) {
+        async.parallel(cleanupCbs, function(cleanupErr) {
+          var shouldRedact;
+          var err;
+          if (err && cleanupErr) {
+            err = new Error(`Bosh err: ${runErr}, Cleanup Err: ${cleanupErr}`);
+            shouldRedact = true;
+          } else if (runErr) {
+            err = runErr;
+            shouldRedact = true;
+          } else {
+            err = cleanupErr
+            shouldRedact = false;
+          }
+
+          taskEndedCb(err, shouldRedact);
+        });
+      });
     });
   };
 
@@ -304,6 +388,42 @@ function BoshRunner(config = {}) {
       output = 'No changes...';
     }
     return output;
+  }
+
+  function downloadVarsStore(config, localPath, cb) {
+    var client = S3.createClient({
+      accessKey: config.access_key,
+      secretKey: config.secret_key,
+      endpoint:  config.endpoint,
+    });
+
+    var downloadParams = {
+      bucket:    config.bucket,
+      key:       config.key,
+      localPath: localPath,
+    };
+    client.download(downloadParams, function(err) {
+      if (err && err instanceof S3.NotFoundError) {
+        fs.writeFile(localPath, '', { mode: 0o600 }, cb);
+      } else {
+        cb(err);
+      }
+    });
+  }
+
+  function uploadVarsStore(config, localPath, cb) {
+    var client = S3.createClient({
+      accessKey: config.access_key,
+      secretKey: config.secret_key,
+      endpoint:  config.endpoint,
+    });
+
+    var uploadParams = {
+      bucket:    config.bucket,
+      key:       config.key,
+      localPath: localPath,
+    };
+    client.upload(uploadParams, cb);
   }
 
   return runner;

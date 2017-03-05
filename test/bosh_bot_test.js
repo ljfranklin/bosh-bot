@@ -156,12 +156,20 @@ describe('BoshBot', function() {
     var bosh_ops_files = {
       fake_ops_file: 'fake_ops_path'
     };
+    var bosh_vars_store = {
+      type: 's3',
+      bucket: 'fake-bucket',
+      key: 'fake-key',
+      accessKey: 'fake-access-key',
+      secretKey: 'fake-secret-key',
+    };
 
     beforeEach(function() {
       boshConfig.deployments[0].vars = bosh_vars;
       boshConfig.deployments[0].var_files = bosh_var_files;
       boshConfig.deployments[0].vars_files = bosh_vars_files;
       boshConfig.deployments[0].ops_files = bosh_ops_files;
+      boshConfig.deployments[0].vars_store = bosh_vars_store;
 
       td.when(fakeAssets.fetchAll(td.matchers.anything()))
         .thenCallback(null);
@@ -177,6 +185,7 @@ describe('BoshBot', function() {
         var_files: bosh_var_files,
         vars_files: bosh_vars_files,
         ops_files: bosh_ops_files,
+        vars_store: bosh_vars_store,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -226,6 +235,7 @@ describe('BoshBot', function() {
         var_files: bosh_var_files,
         vars_files: bosh_vars_files,
         ops_files: bosh_ops_files,
+        vars_store: bosh_vars_store,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -256,6 +266,7 @@ describe('BoshBot', function() {
         var_files: bosh_var_files,
         vars_files: bosh_vars_files,
         ops_files: bosh_ops_files,
+        vars_store: bosh_vars_store,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -279,6 +290,7 @@ describe('BoshBot', function() {
         var_files: bosh_var_files,
         vars_files: bosh_vars_files,
         ops_files: bosh_ops_files,
+        vars_store: bosh_vars_store,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -330,6 +342,7 @@ describe('BoshBot', function() {
         var_files: bosh_var_files,
         vars_files: bosh_vars_files,
         ops_files: bosh_ops_files,
+        vars_store: bosh_vars_store,
       };
       td.when(fakeRunner.showDiff(expectedDeployOpts))
         .thenCallback(null, diffPrompt, '');
@@ -349,12 +362,56 @@ Using deployment 'fake-name'
 Expected manifest to specify deployment name 'fake-name' but was 'concourse'
 
 Exit code 1`;
-          endCb(new Error(errMessage));
+          endCb(new Error(errMessage), false);
 
           var deployEndResponse = testController.responses().pop();
           expect(deployEndResponse, 'no response found').to.not.be.null;
           expect(deployEndResponse).to.contain('@alice');
           expect(deployEndResponse).to.contain(errMessage);
+
+          td.verify(fakeRunner.precheck());
+
+          done();
+        });
+      alice.say('@bot takeoff!');
+    });
+
+    it('does not prints the deploy error if redact is true', function(done) {
+      spawnBot();
+
+      var expectedDeployOpts = {
+        name: 'concourse',
+        manifest_path: 'fake-manifest.yml',
+        vars: bosh_vars,
+        var_files: bosh_var_files,
+        vars_files: bosh_vars_files,
+        ops_files: bosh_ops_files,
+        vars_store: bosh_vars_store,
+      };
+      td.when(fakeRunner.showDiff(expectedDeployOpts))
+        .thenCallback(null, diffPrompt, '');
+
+      alice.say('@bot deploy concourse');
+
+      var diffResponse = testController.response();
+      expect(diffResponse, 'no response found').to.not.be.null;
+
+      td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
+        .thenDo(function(_, startCb, endCb) {
+          var errMessage = `
+Using environment 'bosh.lylefranklin.com' as user 'admin'
+
+Using deployment 'fake-name'
+
+Expected manifest to specify deployment name 'fake-name' but was 'concourse'
+
+Exit code 1`;
+          endCb(new Error(errMessage), true);
+
+          var deployEndResponse = testController.responses().pop();
+          expect(deployEndResponse, 'no response found').to.not.be.null;
+          expect(deployEndResponse).to.contain('@alice');
+          expect(deployEndResponse).to.not.contain(errMessage);
 
           td.verify(fakeRunner.precheck());
 
