@@ -43,7 +43,12 @@ slackbot.startRTM(function(err,bot,response) {
 
   config.get('bosh').authorizedUserIDs = [];
   config.get('slack').authorizedUsernames.forEach(function(name) {
-    config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
+    if (usernamesToIDs[name]) {
+      config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
+    } else {
+      console.error(new Error(`Couldn't find a Slack user with username '${name}'`));
+      process.exit(1);
+    }
   });
 
   var bot = new BoshBot(config.get('bosh'));
