@@ -29,38 +29,31 @@ slackbot = controller.spawn({
   token: config.get('slack.token'),
   retry: Infinity,
 });
-slackbot.startRTM(function(err) {
+slackbot.startRTM(function(err,bot,response) {
   if (err) {
     console.error(err);
     process.exit(1);
   }
 
-  slackbot.api.users.list({}, function(err, response) {
+  // TODO: throw error if name not found
+  var usernamesToIDs = [];
+  response.users.forEach(function(member) {
+    usernamesToIDs[member.name] = member.id;
+  });
+
+  config.get('bosh').authorizedUserIDs = [];
+  config.get('slack').authorizedUsernames.forEach(function(name) {
+    config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
+  });
+
+  var bot = new BoshBot(config.get('bosh'));
+  bot.setup(controller, 'general', function(err) {
     if (err) {
       console.error(err);
       process.exit(1);
     }
 
-    // TODO: throw error if name not found
-    var usernamesToIDs = [];
-    response.members.forEach(function(member) {
-      usernamesToIDs[member.name] = member.id;
-    });
-
-    config.get('bosh').authorizedUserIDs = [];
-    config.get('slack').authorizedUsernames.forEach(function(name) {
-      config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
-    });
-
-    var bot = new BoshBot(config.get('bosh'));
-    bot.setup(controller, 'general', function(err) {
-      if (err) {
-        console.error(err);
-        process.exit(1);
-      }
-
-      console.log('Ready for connections!');
-    });
+    console.log('Ready for connections!');
   });
 });
 
