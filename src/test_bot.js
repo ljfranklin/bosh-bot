@@ -1,4 +1,5 @@
 var Botkit = require('botkit');
+var td = require('testdouble');
 
 function Testbot(configuration) {
     configuration = configuration || {};
@@ -17,6 +18,8 @@ function Testbot(configuration) {
               name: configuration.name || 'bot',
             },
         };
+        // allow caller to pass in arbitrary bot fields
+        bot = Object.assign(bot, configuration);
 
         var responses = [];
         var responseCursor = 0;

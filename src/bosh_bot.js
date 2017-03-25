@@ -14,6 +14,7 @@ function BoshBot(config) {
     releases: config.releases || [],
     stemcells: config.stemcells || [],
     assets: config.assets || [],
+    authorizedUserIDs: config.authorizedUserIDs || [],
   }
 
   // TODO: random tmp dir?
@@ -29,12 +30,20 @@ function BoshBot(config) {
   runner.precheck();
 
   boshbot.setup = function(controller, defaultChannel, setupCb) {
+    controller.middleware.heard.use(function(bot, message, next) {
+			if (boshbot.authorizedUserIDs.includes(message.user)) {
+			  next();
+			} else {
+				bot.reply(message, `<@${message.user}> I'm afraid you don't have a ticket for this flight. Please see one of our authorized staff to get this sorted out.`);
+      }
+    });
+
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Hello yourself.`);
     });
 
     controller.hears('ping',['direct_message','direct_mention','mention'],function(bot,message) {
-      bot.reply(message, `<@${message.user}> pong`);
+			bot.reply(message, `<@${message.user}> pong`);
     });
 
     controller.hears('env',['direct_message','direct_mention','mention'],function(bot,message) {
@@ -379,7 +388,7 @@ function BoshBot(config) {
       bot.reply(message, `<@${message.user}> Sorry, didn't catch that...`);
     });
 
-    assets.fetchAll(boshbot.assets, setupCb);
+		assets.fetchAll(boshbot.assets, setupCb);
   };
 
   return boshbot;

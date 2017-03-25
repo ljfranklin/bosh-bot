@@ -6,7 +6,7 @@
   "dependencies": {
     "async": "^2.1.4",
     "aws-sdk": "^2.22.0",
-    "botkit": "^0.4.0",
+    "botkit": "^0.4.10",
     "js-yaml": "^3.6.1",
     "node-forge": "^0.6.48",
     "nodegit": "^0.16.0",

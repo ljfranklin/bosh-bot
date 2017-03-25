@@ -16,6 +16,7 @@ describe('BoshBot', function() {
   var validConfig = {
     slack: {
       token: 'fake-token',
+      authorizedUsernames: ['fake-user'],
     },
     bosh: {
       env: 'fake-env',
@@ -57,6 +58,7 @@ describe('BoshBot', function() {
       err = config.loadSync();
       expect(err).to.be.an('error');
       expect(err.message).to.include('slack.token');
+      expect(err.message).to.include('slack.authorizedUsernames');
       expect(err.message).to.include('bosh.env');
       expect(err.message).to.include('bosh.user');
       expect(err.message).to.include('bosh.password');

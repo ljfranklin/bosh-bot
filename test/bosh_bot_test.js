@@ -17,6 +17,7 @@ describe('BoshBot', function() {
   var fakeAssets;
   var boshConfig;
   var fakeClock;
+  var fakeApi;
 
   beforeEach(function() {
     fakeClock = lolex.install();
@@ -70,6 +71,9 @@ describe('BoshBot', function() {
           assets: ['concourse']
         },
       ],
+      authorizedUserIDs: [
+        'alice',
+      ],
     };
   });
 
@@ -121,6 +125,17 @@ describe('BoshBot', function() {
 
       alice.say('@bot foo');
       expect(testController.response()).to.eql('<@alice> Sorry, didn\'t catch that...');
+    });
+
+    it('tells an unknown user that they do not have permission', function() {
+      spawnBot();
+
+      becky = testController.createUser({
+        user: 'becky'
+      });
+
+      becky.say('@bot ping');
+      expect(testController.response()).to.include('ticket');
     });
   });
 

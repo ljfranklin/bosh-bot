@@ -25,18 +25,42 @@ var controller = Botkit.slackbot({
   debug: false,
   retry: 10
 });
-
-var bot = new BoshBot(config.get('bosh'));
-bot.setup(controller, 'general', function(err) {
+slackbot = controller.spawn({
+  token: config.get('slack.token'),
+  retry: Infinity,
+});
+slackbot.startRTM(function(err) {
   if (err) {
     console.error(err);
     process.exit(1);
   }
 
-  controller.spawn({
-    token: config.get('slack.token'),
-    retry: Infinity,
-  }).startRTM();
-  console.log('Ready for connections!');
+  slackbot.api.users.list({}, function(err, response) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
+    // TODO: throw error if name not found
+    var usernamesToIDs = [];
+    response.members.forEach(function(member) {
+      usernamesToIDs[member.name] = member.id;
+    });
+
+    config.get('bosh').authorizedUserIDs = [];
+    config.get('slack').authorizedUsernames.forEach(function(name) {
+      config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
+    });
+
+    var bot = new BoshBot(config.get('bosh'));
+    bot.setup(controller, 'general', function(err) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+
+      console.log('Ready for connections!');
+    });
+  });
 });
 
