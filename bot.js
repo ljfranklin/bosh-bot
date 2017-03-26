@@ -35,7 +35,6 @@ slackbot.startRTM(function(err,bot,response) {
     process.exit(1);
   }
 
-  // TODO: throw error if name not found
   var usernamesToIDs = [];
   response.users.forEach(function(member) {
     usernamesToIDs[member.name] = member.id;
@@ -47,6 +46,21 @@ slackbot.startRTM(function(err,bot,response) {
       config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
     } else {
       console.error(new Error(`Couldn't find a Slack user with username '${name}'`));
+      process.exit(1);
+    }
+  });
+
+  var channelNamesToIDs = [];
+  response.channels.forEach(function(channel) {
+    channelNamesToIDs[channel.name] = channel.id;
+  });
+
+  config.get('bosh').authorizedChannelIDs = [];
+  (config.get('slack').authorizedChannels || []).forEach(function(name) {
+    if (channelNamesToIDs[name]) {
+      config.get('bosh').authorizedChannelIDs.push(channelNamesToIDs[name]);
+    } else {
+      console.error(new Error(`Couldn't find a Slack channel with name '${name}'`));
       process.exit(1);
     }
   });

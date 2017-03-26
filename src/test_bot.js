@@ -129,7 +129,7 @@ function User(botkit, bot, opts) {
   user.say = function(messageText) {
     var message = {
       user: opts.user,
-      channel: 'default',
+      channel: opts.channel || 'default',
       text: messageText
     };
     botkit.receiveMessage(bot, message);

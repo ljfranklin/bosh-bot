@@ -15,7 +15,8 @@ function BoshBot(config) {
     stemcells: config.stemcells || [],
     assets: config.assets || [],
     authorizedUserIDs: config.authorizedUserIDs || [],
-  }
+    authorizedChannelIDs: config.authorizedChannelIDs || [],
+  };
 
   // TODO: random tmp dir?
   var assetsDir = '/tmp';
@@ -31,6 +32,11 @@ function BoshBot(config) {
 
   boshbot.setup = function(controller, defaultChannel, setupCb) {
     controller.middleware.heard.use(function(bot, message, next) {
+      if (boshbot.authorizedChannelIDs.length > 0 && boshbot.authorizedChannelIDs.includes(message.channel) == false) {
+        // do not response
+        return;
+      }
+
 			if (boshbot.authorizedUserIDs.includes(message.user)) {
 			  next();
 			} else {

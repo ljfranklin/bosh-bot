@@ -10,12 +10,31 @@ describe('TestBot', function(){
 
       controller.on('message_received', function(bot,message) {
         expect(message.user).to.eql('alice');
+        expect(message.channel).to.eql('default');
         expect(message.text).to.eql('hello');
         done();
       });
 
       alice = controller.createUser({
         user: 'alice'
+      });
+      alice.say('hello');
+    });
+
+    it('uses the specified channel', function(done) {
+      var controller = TestBot();
+      controller.spawn();
+
+      controller.on('message_received', function(bot,message) {
+        expect(message.user).to.eql('alice');
+        expect(message.channel).to.eql('testing');
+        expect(message.text).to.eql('hello');
+        done();
+      });
+
+      alice = controller.createUser({
+        user: 'alice',
+        channel: 'testing',
       });
       alice.say('hello');
     });
