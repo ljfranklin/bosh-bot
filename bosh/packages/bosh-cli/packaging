@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -eu
+
+chmod +x ./bosh-cli/*
+cp -r ./bosh-cli/* "${BOSH_INSTALL_TARGET}"

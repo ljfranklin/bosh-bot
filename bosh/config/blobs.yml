@@ -1,0 +1,8 @@
+bosh-cli/bosh:
+  size: 19513655
+  object_id: 891d735a-39a2-4365-45bf-9b5d69d5f69f
+  sha: f23c3aecec999cfda93a3123ccc724f09856a5c9
+nodejs/node-v7.7.4-linux-x64.tar.xz:
+  size: 10355944
+  object_id: a0c9fc50-1be7-4a58-7f32-d41be50d66d7
+  sha: da21d63c5605fc7c005f46a5a6a75ea029975f81

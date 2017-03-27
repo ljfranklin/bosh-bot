@@ -7,7 +7,7 @@ function Config(configPath) {
 
   var requiredProperties = [
     'slack.token',
-    'slack.authorizedUsernames',
+    'slack.authorized_usernames',
     'bosh.env',
     'bosh.user',
     'bosh.password',

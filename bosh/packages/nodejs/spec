@@ -1,0 +1,5 @@
+---
+name: nodejs
+files:
+# https://nodejs.org/dist/v7.7.4/node-v7.7.4-linux-x64.tar.xz
+- nodejs/node-v7.7.4-linux-x64.tar.xz

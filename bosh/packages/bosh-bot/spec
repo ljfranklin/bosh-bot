@@ -1,0 +1,9 @@
+---
+name: bosh-bot
+dependencies:
+- nodejs
+files:
+- node_modules/**/*
+- src/**/*
+- bot.js
+- package.json

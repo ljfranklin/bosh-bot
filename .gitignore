@@ -1,3 +1,7 @@
 tmp/
 /assets/*
 build/Release
+bosh/blobs/
+bosh/config/private.yml
+bosh/.dev_builds
+bosh/dev_releases

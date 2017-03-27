@@ -1,0 +1,5 @@
+check process bosh-bot
+  with pidfile /var/vcap/sys/run/bosh-bot/bosh-bot.pid
+  start program "/var/vcap/jobs/bosh-bot/bin/ctl start"
+  stop program "/var/vcap/jobs/bosh-bot/bin/ctl stop"
+  group vcap

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -eu
+
+cp -r ./* "${BOSH_INSTALL_TARGET}"
+pushd "${BOSH_INSTALL_TARGET}" > /dev/null
+  export PATH=$PATH:/var/vcap/packages/nodejs/bin
+  npm rebuild
+popd > /dev/null

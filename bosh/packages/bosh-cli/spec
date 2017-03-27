@@ -1,0 +1,5 @@
+---
+name: bosh-cli
+files:
+# https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.1-linux-amd64
+- bosh-cli/bosh

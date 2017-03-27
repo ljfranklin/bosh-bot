@@ -1,0 +1,8 @@
+---
+name: bosh-bot
+blobstore:
+  provider: s3
+  options:
+    # TODO: submit issue that include https:// fails
+    host: storage.googleapis.com
+    bucket_name: bosh-bot-blobs

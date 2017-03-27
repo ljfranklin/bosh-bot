@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -eu
+
+run_dir=/var/vcap/sys/run/bosh-bot
+log_dir=/var/vcap/sys/log/bosh-bot
+
+PID_FILE="${run_dir}/bosh-bot.pid"
+
+mkdir -p "${run_dir}"
+chown -R vcap:vcap "${run_dir}"
+
+mkdir -p "${log_dir}"
+chown -R vcap:vcap "${log_dir}"
+
+exec >> "${log_dir}/bosh-bot-ctl.log" 2>&1
+
+package_dir="/var/vcap/jobs/bosh-bot/packages"
+export PATH="$PATH:${package_dir}/nodejs/bin/"
+export PATH="$PATH:${package_dir}/bosh-cli/"
+
+export BOSH_BOT_CONFIG="/var/vcap/jobs/bosh-bot/config/bot.yml"
+
+case "$1" in
+
+  start)
+    # TODO: write pid file inside js program
+    echo $$ > "${PID_FILE}"
+    exec chpst -u vcap:vcap node "${package_dir}/bosh-bot/bot.js"
+    ;;
+  stop)
+    kill "$( cat "${PID_FILE}" )"
+    ;;
+  *)
+    echo "Usage: ctl {start|stop}"
+    ;;
+esac
+

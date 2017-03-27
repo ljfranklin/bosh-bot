@@ -1,0 +1,13 @@
+---
+slack:
+  token: <%= p('slack.token') %>
+  authorized_usernames: <%= p('slack.authorized_usernames') %>
+  authorized_channels: <%= p('slack.authorized_channels') %>
+bosh:
+  env: <%= p('bosh.env') %>
+  user: <%= p('bosh.user') %>
+  password: <%= p('bosh.password') %>
+  releases: <%= p('bosh.releases').to_json %>
+  stemcells: <%= p('bosh.stemcells').to_json %>
+  deployments: <%= p('bosh.deployments').to_json %>
+  assets: <%= p('bosh.assets').to_json %>

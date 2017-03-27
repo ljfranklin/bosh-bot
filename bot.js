@@ -41,7 +41,7 @@ slackbot.startRTM(function(err,bot,response) {
   });
 
   config.get('bosh').authorizedUserIDs = [];
-  config.get('slack').authorizedUsernames.forEach(function(name) {
+  config.get('slack').authorized_usernames.forEach(function(name) {
     if (usernamesToIDs[name]) {
       config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
     } else {
@@ -56,7 +56,7 @@ slackbot.startRTM(function(err,bot,response) {
   });
 
   config.get('bosh').authorizedChannelIDs = [];
-  (config.get('slack').authorizedChannels || []).forEach(function(name) {
+  (config.get('slack').authorized_channels || []).forEach(function(name) {
     if (channelNamesToIDs[name]) {
       config.get('bosh').authorizedChannelIDs.push(channelNamesToIDs[name]);
     } else {

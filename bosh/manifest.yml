@@ -1,0 +1,41 @@
+---
+name: bosh-bot
+
+releases:
+- {name: bosh-bot, version: latest}
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: latest
+
+instance_groups:
+- name: bosh-bot
+  instances: 1
+  azs: [z1]
+  jobs:
+  - name: bosh-bot
+    release: bosh-bot
+    properties:
+      slack:
+        token: ((bosh_bot_slack_token))
+        authorized_usernames: ((bosh_bot_slack_authorized_usernames))
+        authorized_channels: ((bosh_bot_slack_authorized_channels))
+      bosh:
+        env: ((bosh_bot_env))
+        user: ((bosh_bot_user))
+        password: ((bosh_bot_password))
+        releases: ((bosh_bot_releases))
+        stemcells: ((bosh_bot_stemcells))
+        deployments: ((bosh_bot_deployments))
+        assets: ((bosh_bot_assets))
+  vm_type: bot
+  stemcell: default
+  networks:
+  - name: private
+
+update:
+  canaries: 1
+  max_in_flight: 10
+  canary_watch_time: 1000-30000
+  update_watch_time: 1000-30000

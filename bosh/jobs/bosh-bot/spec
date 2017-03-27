@@ -1,0 +1,40 @@
+---
+name: bosh-bot
+
+templates:
+  config.yml.erb: config/bot.yml
+  ctl.erb:  bin/ctl
+  pre-start.erb: bin/pre-start
+
+packages:
+- bosh-bot
+- nodejs
+- bosh-cli
+
+properties:
+  slack.token:
+    description: ''
+  slack.authorized_usernames:
+    description: ''
+  slack.authorized_channels:
+    description: ''
+    default: []
+
+  bosh.env:
+    description: ''
+  bosh.user:
+    description: ''
+  bosh.password:
+    description: ''
+  bosh.releases:
+    description: ''
+    default: []
+  bosh.stemcells:
+    description: ''
+    default: []
+  bosh.deployments:
+    description: ''
+    default: []
+  bosh.assets:
+    description: ''
+    default: []

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -eu
+
+tar xf nodejs/node-*-linux-x64.tar.xz --strip 1 -C "${BOSH_INSTALL_TARGET}"
