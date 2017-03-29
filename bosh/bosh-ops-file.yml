@@ -11,7 +11,7 @@
 
 - type: replace
   path: /instance_groups/name=bosh/jobs/-
-  value: {name: bosh_bot, release: bosh_bot}
+  value: {name: bosh-bot, release: bosh-bot}
 
 - type: replace
   path: /instance_groups/name=bosh/properties/slack?
