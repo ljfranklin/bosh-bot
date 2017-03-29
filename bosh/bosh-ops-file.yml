@@ -1,0 +1,33 @@
+---
+# This file can be used to co-located bosh-bot on your BOSH Director
+
+- type: replace
+  path: /releases/-
+  value:
+    version: 0.0.1
+    url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.1.tgz
+    sha1: 0397c6db017a56d22eaf541da63f823a96806ddf
+
+- type: replace
+  path: /instance_groups/name=bosh/jobs/-
+  value: {name: bosh_bot, release: bosh_bot}
+
+- type: replace
+  path: /instance_groups/name=bosh/properties/slack?
+  value:
+    token: ((bosh_bot_slack_token))
+    authorized_usernames: ((bosh_bot_slack_authorized_usernames))
+    authorized_channels: ((bosh_bot_slack_authorized_channels))
+
+- type: replace
+  path: /instance_groups/name=bosh/properties/bosh?
+  value:
+    releases: ((bosh_bot_releases))
+    stemcells: ((bosh_bot_stemcells))
+    deployments: ((bosh_bot_deployments))
+    assets: ((bosh_bot_assets))
+    # existing director manifest variables
+    user: admin
+    password: ((admin_password))
+    # from terraform outputs
+    env: ((bosh_hostname))
