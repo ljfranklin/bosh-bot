@@ -5,9 +5,9 @@
   path: /releases/-
   value:
     name: bosh-bot
-    version: 0.0.1
-    url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.1.tgz
-    sha1: 0397c6db017a56d22eaf541da63f823a96806ddf
+    version: 0.0.2
+    url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.2.tgz
+    sha1: 12a224c4cac42acbd2397a73766eabe6217a39d7
 
 - type: replace
   path: /instance_groups/name=bosh/jobs/-
@@ -19,6 +19,7 @@
     token: ((bosh_bot_slack_token))
     authorized_usernames: ((bosh_bot_slack_authorized_usernames))
     authorized_channels: ((bosh_bot_slack_authorized_channels))
+    notification_channel: ((bosh_bot_slack_notification_channel))
 
 - type: replace
   path: /instance_groups/name=bosh/properties/bosh?

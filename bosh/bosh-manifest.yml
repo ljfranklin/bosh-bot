@@ -2,7 +2,10 @@
 name: bosh-bot
 
 releases:
-- {name: bosh-bot, version: latest}
+- name: bosh-bot
+  version: 0.0.2
+  url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.2.tgz
+  sha1: 12a224c4cac42acbd2397a73766eabe6217a39d7
 
 stemcells:
 - alias: default
@@ -21,6 +24,7 @@ instance_groups:
         token: ((bosh_bot_slack_token))
         authorized_usernames: ((bosh_bot_slack_authorized_usernames))
         authorized_channels: ((bosh_bot_slack_authorized_channels))
+        notification_channel: ((bosh_bot_slack_notification_channel))
       bosh:
         env: ((bosh_bot_env))
         user: ((bosh_bot_user))

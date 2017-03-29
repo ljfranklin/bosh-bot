@@ -65,8 +65,9 @@ slackbot.startRTM(function(err,bot,response) {
     }
   });
 
+  var notificationChannel = config.get('slack').notification_channel || 'general'
   var bot = new BoshBot(config.get('bosh'));
-  bot.setup(controller, 'general', function(err) {
+  bot.setup(controller, notificationChannel, function(err) {
     if (err) {
       console.error(err);
       process.exit(1);
