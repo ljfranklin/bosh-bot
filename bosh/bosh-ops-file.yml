@@ -4,6 +4,7 @@
 - type: replace
   path: /releases/-
   value:
+    name: bosh-bot
     version: 0.0.1
     url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.1.tgz
     sha1: 0397c6db017a56d22eaf541da63f823a96806ddf
