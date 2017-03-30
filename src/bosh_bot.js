@@ -37,10 +37,10 @@ function BoshBot(config) {
         return;
       }
 
-			if (boshbot.authorizedUserIDs.includes(message.user)) {
-			  next();
-			} else {
-				bot.reply(message, `<@${message.user}> I'm afraid you don't have a ticket for this flight. Please see one of our authorized staff to get this sorted out.`);
+      if (boshbot.authorizedUserIDs.includes(message.user)) {
+        next();
+      } else {
+        bot.reply(message, `<@${message.user}> I'm afraid you don't have a ticket for this flight. Please see one of our authorized staff to get this sorted out.`);
       }
     });
 
