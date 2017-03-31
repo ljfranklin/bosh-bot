@@ -7,7 +7,9 @@ name: ((deployment_name))
 
 releases:
 - name: dummy
-  version: latest
+  version: 2
+  url: https://github.com/pivotal-cf-experimental/dummy-boshrelease/releases/download/v2/dummy-2.tgz
+  sha1: 3d8ce8f0000c54e8cae990e7c010f10b52b54e6f
 
 stemcells:
 - alias: ubuntu
