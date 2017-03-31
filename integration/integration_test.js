@@ -83,7 +83,7 @@ describe('Integration', function() {
             manifest_path: 'bosh-bot/integration/assets/dummy-manifest.yml',
             assets: ['bosh-bot'],
             vars: {
-              dummy_echo_value: 'testing',
+              deployment_name: deploymentName,
             },
             vars_store: {
               endpoint: process.env.BOSH_BOT_S3_ENDPOINT,

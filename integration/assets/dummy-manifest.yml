@@ -3,7 +3,7 @@
 # - vm_type: tiny
 # - network: private
 
-name: dummy
+name: ((deployment_name))
 
 releases:
 - name: dummy
@@ -22,13 +22,8 @@ instance_groups:
   networks:
   - name: private
   jobs:
-  - name: dummy_with_properties
+  - name: dummy
     release: dummy
-    properties:
-      dummy_with_properties:
-        echo_value: ((dummy_echo_value))
-        sleep_value: 1
-        exit_value: 0
 
 update:
   canaries: 1
