@@ -216,16 +216,25 @@ function BoshRunner(config = {}) {
       var stdout = '';
       var stderr = '';
       boshProcess.stdout.on('data', function(out) {
+        console.log(out.toString());
         stdout += out.toString();
       });
       boshProcess.stderr.on('data', function(out) {
+        console.log(out.toString());
         stderr += out.toString();
       });
 
+      var processErr;
       boshProcess.on('error', function(err) {
-        nestedCb(err, filterOutput(stdout), stderr);
+        console.log(err);
+        processErr = err;
       });
-      boshProcess.on('close', function(err) {
+      boshProcess.on('close', function() {
+        if (processErr) {
+					nestedCb(processErr, filterOutput(stdout), stderr);
+          return;
+        }
+
         var diffSucceeded = stdout.match(diffPrompt);
         if (diffSucceeded) {
           nestedCb(null, filterOutput(stdout), stderr);
@@ -242,13 +251,13 @@ function BoshRunner(config = {}) {
         return;
       }
 
-      runCmd(function(err, stdout, stderr) {
-        async.parallel(cleanupCbs, function(err) {
-          if (err) {
-            cb(err, null, null);
+      runCmd(function(runErr, stdout, stderr) {
+        async.parallel(cleanupCbs, function(cleanupErr) {
+          if (runErr) {
+            cb(runErr, null, null);
             return;
           }
-          cb(err, stdout, stderr);
+          cb(cleanupErr, stdout, stderr);
         });
       });
     });
