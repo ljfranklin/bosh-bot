@@ -5,6 +5,7 @@ var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var spawn = require('child_process').spawn;
 var path = require('path');
 var fs = require('fs');
+var BoshRunner = require('../src/bosh_runner');
 
 describe('Integration', function() {
   var slackClient;
@@ -15,6 +16,7 @@ describe('Integration', function() {
   var deploymentName = 'dummy-deployment'; // TODO: random name
   var botProcess;
   var configPath;
+  var boshRunner;
 
   beforeEach(function(done) {
     this.timeout(10000);
@@ -111,6 +113,8 @@ describe('Integration', function() {
       throw err;
     }
 
+    boshRunner = BoshRunner(botConfig.bosh);
+
     slackClient = new RtmClient(clientToken);
 
     slackClient.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (info) {
@@ -141,43 +145,52 @@ describe('Integration', function() {
     // create config with dummy release
   });
 
-  afterEach(function() {
-    // delete the dummy release from director
-    // delete the dummy deployment from director
+  afterEach(function(done) {
+    this.timeout(300000);
+
     botProcess.kill();
     fs.unlinkSync(configPath);
+    boshRunner.deleteDeployment(deploymentName, function(err) {
+      expect(err).to.be.null;
+      done();
+    })
   });
 
   it('performs a deployment', function(done) {
-    this.timeout(30000);
+    this.timeout(300000);
 
-    slackClient.sendMessage(`<@${serverBotID}|${serverBotName}> deploy ${deploymentName}!`, channelID, function(err) {
-      if (err) {
-        throw err;
-      }
+    boshRunner.deploymentExists(deploymentName, function(err, deploymentExists) {
+      expect(err).to.be.null;
+      expect(deploymentExists).to.equal(false, `Expected deployment ${deploymentName} to not exist`);
+
+      slackClient.sendMessage(`<@${serverBotID}|${serverBotName}> deploy ${deploymentName}!`, channelID, function(err) {
+        expect(err).to.be.null;
+      });
+
+      slackClient.on(RTM_EVENTS.MESSAGE, function(message) {
+        if (message.user == clientBotID) {
+          return;
+        }
+        console.log(`Received message: ${message.text}`);
+
+        if (message.text.includes('takeoff')) {
+          slackClient.sendMessage(`<@${serverBotID}|${serverBotName}> takeoff!`, channelID, function(err) {
+            if (err) {
+              throw err;
+            }
+          });
+        } else if (message.text.includes('load your assets') || message.text.includes("We're off")) {
+          // no-op
+        } else if (message.text.includes('successful landing')) {
+          boshRunner.deploymentExists(deploymentName, function(err, deploymentExists) {
+            expect(err).to.be.null;
+            expect(deploymentExists).to.equal(true, `Expected deployment ${deploymentName} to exist`);
+            done();
+          });
+        } else {
+          throw new Error(`Unexpected response: ${message.text}`);
+        }
+      });
     });
-
-    slackClient.on(RTM_EVENTS.MESSAGE, function(message) {
-      if (message.user == clientBotID) {
-        return;
-      }
-      console.log(`Received message: ${message.text}`);
-
-      if (message.text.includes('takeoff')) {
-        slackClient.sendMessage(`<@${serverBotID}|${serverBotName}> takeoff!`, channelID, function(err) {
-          if (err) {
-            throw err;
-          }
-        });
-      } else if (message.text.includes('successful landing')) {
-        done();
-      } else if (message.text.includes('load your assets') || message.text.includes("We're off")) {
-        // no-op
-      } else {
-        throw new Error(`Unexpected response: ${message.text}`);
-      }
-    });
-
-    // verify deployment actually exists
   });
 });

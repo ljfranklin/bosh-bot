@@ -36,6 +36,41 @@ function BoshRunner(config = {}) {
     }
   };
 
+  runner.deploymentExists = function(deploymentName, cb) {
+    console.log(`Checking for deployment '${deploymentName}'...`);
+    exec(`bosh -n deployments --json`, { cwd: runner.cwd, env: boshEnv }, function(err, stdout, stderr) {
+      if (err) {
+        cb(new Error(`Error checking deployments: ${err}. ${stdout}`));
+        return;
+      }
+      var deployments = JSON.parse(stdout);
+      var nameColumn = 0;
+      var deploymentNames = deployments.Tables[0].Rows.map(function(row) {
+				return row[nameColumn];
+      });
+
+      var deploymentExists = deploymentNames.some(function(name) {
+				return name == deploymentName;
+      });
+
+      console.log(`Successfully checked for deployment!`);
+      cb(null, deploymentExists);
+    });
+  };
+
+  runner.deleteDeployment = function(deploymentName, cb) {
+    console.log(`Deleting deployment '${deploymentName}'...`);
+    exec(`bosh -n delete-deployment -d ${deploymentName}`, { cwd: runner.cwd, env: boshEnv }, function(err, _, stderr) {
+      if (err) {
+        cb(new Error(`Error deleting deployment: ${err}. ${stderr}`));
+        return;
+      }
+
+      console.log(`Successfully deleted deployment!`);
+      cb(null);
+    });
+  };
+
   runner.getLatestReleaseVersions = function(cb) {
     console.log('Checking for Director release versions...');
     exec('bosh releases --json', { cwd: runner.cwd, env: boshEnv }, function(err, stdout, stderr) {
