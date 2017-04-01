@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -eu
+
+project_dir="$( cd "$( dirname "$0" )/.." && pwd )"
+
+pushd "${project_dir}" > /dev/null
+  mocha integration/
+popd > /dev/null

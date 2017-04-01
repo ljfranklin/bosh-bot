@@ -16,7 +16,7 @@ describe('BoshBot', function() {
   var validConfig = {
     slack: {
       token: 'fake-token',
-      authorizedUsernames: ['fake-user'],
+      authorized_usernames: ['fake-user'],
     },
     bosh: {
       env: 'fake-env',
