@@ -19,6 +19,7 @@ stemcells:
 instance_groups:
 - name: dummy
   instances: 1
+  azs: [z1]
   vm_type: tiny
   stemcell: ubuntu
   networks:

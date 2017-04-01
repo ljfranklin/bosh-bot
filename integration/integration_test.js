@@ -168,10 +168,13 @@ describe('Integration', function() {
           if (err) {
             throw err;
           }
-
-          // verify success response
-          done();
         });
+      } else if (message.text.includes('successful landing')) {
+        done();
+      } else if (message.text.includes('load your assets') || message.text.includes("We're off")) {
+        // no-op
+      } else {
+        throw new Error(`Unexpected response: ${message.text}`);
       }
     });
 
