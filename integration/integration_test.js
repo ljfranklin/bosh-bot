@@ -19,7 +19,7 @@ describe('Integration', function() {
   var boshRunner;
 
   beforeEach(function(done) {
-    this.timeout(10000);
+    this.timeout(30000);
 
     var clientToken = process.env.BOSH_BOT_CI_CLIENT_SLACK_TOKEN;
     if (clientToken == null) {
