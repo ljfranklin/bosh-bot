@@ -1,0 +1,29 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ljfranklin/bosh-bot
+
+inputs:
+  - name: bosh-bot
+
+run:
+  path: bosh-bot/scripts/test_integration
+
+params:
+  BOSH_BOT_S3_BUCKET:             ""
+  BOSH_BOT_S3_ACCESS_KEY:         ""
+  BOSH_BOT_S3_SECRET_KEY:         ""
+  BOSH_BOT_S3_ENDPOINT:           ""
+  BOSH_BOT_CI_CLIENT_BOT_NAME:    ""
+  BOSH_BOT_CI_CLIENT_SLACK_TOKEN: ""
+  BOSH_BOT_CI_SERVER_BOT_NAME:    ""
+  BOSH_BOT_CI_SERVER_SLACK_TOKEN: ""
+  BOSH_BOT_CI_CHANNEL:            ""
+  BOSH_BOT_CI_DIRECTOR_ADDRESS:   ""
+  BOSH_BOT_CI_DIRECTOR_USER:      ""
+  BOSH_BOT_CI_DIRECTOR_PASSWORD:  ""
+  BOSH_BOT_CI_STEMCELL_ID:        ""
+  BOSH_BOT_CI_DEPLOY_KEY:         ""

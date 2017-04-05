@@ -34,3 +34,27 @@ jobs:
       - task: test-unit
         file: bosh-bot/ci/tasks/test-unit.yml
     on_failure: *failure-alert
+
+  - name: test-integration
+    plan:
+      - get: bosh-bot
+        trigger: true
+        passed: [test-unit]
+      - task: test-integration
+        file: bosh-bot/ci/tasks/test-integration.yml
+        params:
+          BOSH_BOT_S3_BUCKET:             {{bosh_bot_s3_bucket}}
+          BOSH_BOT_S3_ACCESS_KEY:         {{bosh_bot_s3_access_key}}
+          BOSH_BOT_S3_SECRET_KEY:         {{bosh_bot_s3_secret_key}}
+          BOSH_BOT_S3_ENDPOINT:           {{bosh_bot_s3_endpoint}}
+          BOSH_BOT_CI_CLIENT_BOT_NAME:    {{bosh_bot_ci_client_bot_name}}
+          BOSH_BOT_CI_CLIENT_SLACK_TOKEN: {{bosh_bot_ci_client_slack_token}}
+          BOSH_BOT_CI_SERVER_BOT_NAME:    {{bosh_bot_ci_server_bot_name}}
+          BOSH_BOT_CI_SERVER_SLACK_TOKEN: {{bosh_bot_ci_server_slack_token}}
+          BOSH_BOT_CI_CHANNEL:            {{bosh_bot_ci_channel}}
+          BOSH_BOT_CI_DIRECTOR_ADDRESS:   {{bosh_bot_ci_director_address}}
+          BOSH_BOT_CI_DIRECTOR_USER:      {{bosh_bot_ci_director_user}}
+          BOSH_BOT_CI_DIRECTOR_PASSWORD:  {{bosh_bot_ci_director_password}}
+          BOSH_BOT_CI_STEMCELL_ID:        {{bosh_bot_ci_stemcell_id}}
+          BOSH_BOT_CI_DEPLOY_KEY:         {{bosh_bot_ci_deploy_key}}
+    on_failure: *failure-alert
