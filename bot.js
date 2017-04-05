@@ -73,6 +73,11 @@ slackbot.startRTM(function(err,bot,response) {
       process.exit(1);
     }
 
+    var pidfile = config.get('pidfile');
+    if (pidfile) {
+      fs.writeSync(pidfile, process.pid);
+    }
+
     console.log('Ready for connections!');
   });
 });

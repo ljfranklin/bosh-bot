@@ -24,8 +24,6 @@ export BOSH_BOT_CONFIG="/var/vcap/jobs/bosh-bot/config/bot.yml"
 case "$1" in
 
   start)
-    # TODO: write pid file inside js program
-    echo $$ > "${PID_FILE}"
     exec chpst -u vcap:vcap node "${package_dir}/bosh-bot/bot.js"
     ;;
   stop)
