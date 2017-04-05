@@ -75,7 +75,7 @@ slackbot.startRTM(function(err,bot,response) {
 
     var pidfile = config.get('pidfile');
     if (pidfile) {
-      fs.writeSync(pidfile, process.pid);
+      fs.writeFileSync(pidfile, process.pid);
     }
 
     console.log('Ready for connections!');
