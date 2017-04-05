@@ -5,9 +5,9 @@
   path: /releases/-
   value:
     name: bosh-bot
-    version: 0.0.4
-    url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.4.tgz
-    sha1: 2cf2442b0ff64d21011d39be79aa346fe11c3744
+    version: 0.0.5
+    url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.5.tgz
+    sha1: e22404fce061227c23be7a30eaa085491be4af23
 
 - type: replace
   path: /instance_groups/name=bosh/jobs/-
