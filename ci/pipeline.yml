@@ -1,0 +1,36 @@
+---
+shared:
+  - &failure-alert
+    put: slack-alert
+    params:
+      silent: true
+      icon_emoji: ":interrobang:"
+      text: |
+        *The <$ATC_EXTERNAL_URL/teams/main/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_JOB_NAME> job failed!*
+
+resources:
+  - name: bosh-bot
+    type: git
+    source:
+      uri: https://github.com/ljfranklin/bosh-bot.git
+      branch: master
+  - name: slack-alert
+    type: slack-notification
+    source:
+      url: {{slack_integration_url}}
+
+resource_types:
+  - name: slack-notification
+    type: docker-image
+    source:
+      repository: cfcommunity/slack-notification-resource
+      tag: latest
+
+jobs:
+  - name: test-unit
+    plan:
+      - get: bosh-bot
+        trigger: true
+      - task: test-unit
+        file: bosh-bot/ci/tasks/test-unit.yml
+    on_failure: *failure-alert

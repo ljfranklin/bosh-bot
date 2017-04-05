@@ -9,8 +9,8 @@
     "botkit": "^0.4.10",
     "js-yaml": "^3.6.1",
     "node-forge": "^0.6.48",
-    "nodegit": "^0.16.0",
     "semver": "^5.3.0",
+    "simple-git": "^1.69.0",
     "tmp": "0.0.29"
   },
   "devDependencies": {
