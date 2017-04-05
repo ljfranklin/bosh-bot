@@ -3,9 +3,9 @@ name: bosh-bot
 
 releases:
 - name: bosh-bot
-  version: 0.0.2
-  url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.2.tgz
-  sha1: 12a224c4cac42acbd2397a73766eabe6217a39d7
+  version: 0.0.3
+  url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.3.tgz
+  sha1: 9517a49ba30430d44850a8170e81b01c86a00ea6
 
 stemcells:
 - alias: default
