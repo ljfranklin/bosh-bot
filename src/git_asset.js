@@ -42,7 +42,7 @@ function GitClient() {
               kcb(err);
               return;
             }
-            process.env.GIT_SSH_COMMAND = `ssh -i ${privateKeyPath} -F /dev/null`
+            process.env.GIT_SSH_COMMAND = `ssh -i ${privateKeyPath} -F /dev/null -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
 
             kcb();
 	  });
