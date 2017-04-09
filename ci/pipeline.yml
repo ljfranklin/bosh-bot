@@ -112,8 +112,6 @@ jobs:
             params:
               BLOBSTORE_ACCESS_KEY: {{release_access_key}}
               BLOBSTORE_SECRET_ACCESS_KEY: {{release_secret_key}}
-              BLOBSTORE_ENDPOINT: {{release_endpoint}}
-              BLOBSTORE_REGION: {{release_region}}
               GIT_USER_NAME: {{release_git_user_name}}
               GIT_USER_EMAIL: {{release_git_user_email}}
           - put: bosh-bot

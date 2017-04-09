@@ -8,8 +8,6 @@ workspace_dir="$( cd "${project_dir}/.." && pwd )"
 # env
 : ${BLOBSTORE_ACCESS_KEY:?}
 : ${BLOBSTORE_SECRET_ACCESS_KEY:?}
-: ${BLOBSTORE_ENDPOINT:?}
-: ${BLOBSTORE_REGION:?}
 : ${GIT_USER_NAME:?}
 : ${GIT_USER_EMAIL:?}
 

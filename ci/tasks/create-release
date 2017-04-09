@@ -13,7 +13,7 @@ output_dir="${workspace_dir}/created-release"
 
 version="$( cat "${version_dir}/version" )"
 
-pushd "${project_dir}" > /dev/null
+pushd "${project_dir}/bosh" > /dev/null
   bosh create-release \
     --version "${version}" \
     --tarball "${output_dir}/bosh-bot-${version}.tgz"
