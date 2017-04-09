@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -eu
+
+project_dir="$( cd "$( dirname "$0" )/../.." && pwd )"
+workspace_dir="$( cd "${project_dir}/.." && pwd )"
+
+# inputs
+version_dir="${workspace_dir}/version"
+
+# outputs
+output_dir="${workspace_dir}/created-release"
+
+version="$( cat "${version_dir}/version" )"
+
+pushd "${project_dir}" > /dev/null
+  bosh create-release \
+    --version "${version}" \
+    --tarball "${output_dir}/bosh-bot-${version}.tgz"
+popd > /dev/null

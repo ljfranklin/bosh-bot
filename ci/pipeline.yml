@@ -12,12 +12,32 @@ resources:
   - name: bosh-bot
     type: git
     source:
-      uri: https://github.com/ljfranklin/bosh-bot.git
+      uri: git@github.com:ljfranklin/bosh-bot.git
       branch: master
+      private_key: {{bosh_bot_ci_deploy_key}}
   - name: slack-alert
     type: slack-notification
     source:
       url: {{slack_integration_url}}
+  - name: version
+    type: semver
+    source:
+      bucket: {{semver_bucket}}
+      access_key_id: {{semver_access_key}}
+      secret_access_key: {{semver_secret_key}}
+      region_name: {{semver_region}}
+      endpoint: {{semver_endpoint}}
+      key: {{semver_bucket_key}}
+      initial_version: "0.0.1"
+  - name: release
+    type: s3
+    source:
+      bucket: {{release_bucket}}
+      access_key_id: {{release_access_key}}
+      secret_access_key: {{release_secret_key}}
+      region: {{release_region}}
+      endpoint: {{release_endpoint}}
+      regexp: releases/bosh-bot-(.*).tgz
 
 resource_types:
   - name: slack-notification
@@ -57,4 +77,78 @@ jobs:
           BOSH_BOT_CI_DIRECTOR_PASSWORD:  {{bosh_bot_ci_director_password}}
           BOSH_BOT_CI_STEMCELL_ID:        {{bosh_bot_ci_stemcell_id}}
           BOSH_BOT_CI_DEPLOY_KEY:         {{bosh_bot_ci_deploy_key}}
+    on_failure: *failure-alert
+
+  - name: publish-rc-release
+    plan:
+      - get: bosh-bot
+        trigger: true
+        passed: [test-integration]
+      - get: version
+        params:
+          pre: rc
+      - task: create-release
+        file: bosh-bot/ci/tasks/create-release.yml
+      - put: release
+        params:
+          file: "created-release/*.tgz"
+      - put: version
+        params: {file: version/version}
+    on_failure: *failure-alert
+
+  - name: publish-patch-release
+    plan:
+      - get: rc-release
+        resource: release
+        passed: [publish-rc-release]
+      - get: bosh-bot
+      - get: version
+        params:
+          bump: patch
+      - &finalize-release
+        do:
+          - task: finalize-release
+            file: bosh-bot/ci/tasks/finalize-release.yml
+            params:
+              BLOBSTORE_ACCESS_KEY: {{release_access_key}}
+              BLOBSTORE_SECRET_ACCESS_KEY: {{release_secret_key}}
+              BLOBSTORE_ENDPOINT: {{release_endpoint}}
+              BLOBSTORE_REGION: {{release_region}}
+              GIT_USER_NAME: {{release_git_user_name}}
+              GIT_USER_EMAIL: {{release_git_user_email}}
+          - put: bosh-bot
+            params:
+              repository: updated-bosh-bot
+              merge: true
+              tag_prefix: v
+              tag: version/version
+          - put: release
+            params:
+              file: "finalized-release/*.tgz"
+          - put: version
+            params: {file: version/version}
+    on_failure: *failure-alert
+
+  - name: publish-minor-release
+    plan:
+      - get: rc-release
+        resource: release
+        passed: [publish-rc-release]
+      - get: bosh-bot
+      - get: version
+        params:
+          bump: minor
+      - *finalize-release
+    on_failure: *failure-alert
+
+  - name: publish-major-release
+    plan:
+      - get: rc-release
+        resource: release
+        passed: [publish-rc-release]
+      - get: bosh-bot
+      - get: version
+        params:
+          bump: major
+      - *finalize-release
     on_failure: *failure-alert

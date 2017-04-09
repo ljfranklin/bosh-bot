@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -eu
+
+project_dir="$( cd "$( dirname "$0" )/../.." && pwd )"
+workspace_dir="$( cd "${project_dir}/.." && pwd )"
+
+# env
+: ${BLOBSTORE_ACCESS_KEY:?}
+: ${BLOBSTORE_SECRET_ACCESS_KEY:?}
+: ${BLOBSTORE_ENDPOINT:?}
+: ${BLOBSTORE_REGION:?}
+: ${GIT_USER_NAME:?}
+: ${GIT_USER_EMAIL:?}
+
+# inputs
+version_dir="${workspace_dir}/version"
+rc_release_dir="${workspace_dir}/rc-release"
+
+# outputs
+output_release_dir="${workspace_dir}/finalized-release"
+output_bosh_bot_dir="${workspace_dir}/updated-bosh-bot"
+
+version="$( cat "${version_dir}/version" )"
+
+git clone "${project_dir}" "${output_bosh_bot_dir}"
+
+pushd "${output_bosh_bot_dir}/bosh" > /dev/null
+  cat << EOF > ./config/private.yml
+---
+blobstore:
+  s3:
+    access_key_id: "${BLOBSTORE_ACCESS_KEY}"
+    secret_access_key: "${BLOBSTORE_SECRET_ACCESS_KEY}"
+    endpoint: "${BLOBSTORE_ENDPOINT}"
+    region: "${BLOBSTORE_REGION}"
+EOF
+
+  bosh finalize-release \
+    --version "${version}" \
+    ${rc_release_dir}/*.tgz
+
+  mv ${rc_release_dir}/*.tgz ${output_release_dir}
+
+  git add .
+  git config user.name "${GIT_USER_NAME}"
+  git config user.email "${GIT_USER_EMAIL}"
+  git commit -m "Adding final release ${version}"
+popd > /dev/null
