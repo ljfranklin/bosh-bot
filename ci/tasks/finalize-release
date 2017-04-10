@@ -37,7 +37,7 @@ EOF
     --version "${version}" \
     ${rc_release_dir}/*.tgz
 
-  mv ${rc_release_dir}/*.tgz ${output_release_dir}
+  mv ${rc_release_dir}/*.tgz ${output_release_dir}/bosh-bot-${version}.tgz
 
   git add .
   git config user.name "${GIT_USER_NAME}"

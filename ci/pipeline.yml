@@ -14,7 +14,7 @@ resources:
     source:
       uri: git@github.com:ljfranklin/bosh-bot.git
       branch: master
-      private_key: {{bosh_bot_ci_deploy_key}}
+      private_key: {{bosh_bot_deploy_key}}
   - name: slack-alert
     type: slack-notification
     source:
