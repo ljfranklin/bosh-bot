@@ -30,8 +30,6 @@ blobstore:
   s3:
     access_key_id: "${BLOBSTORE_ACCESS_KEY}"
     secret_access_key: "${BLOBSTORE_SECRET_ACCESS_KEY}"
-    endpoint: "${BLOBSTORE_ENDPOINT}"
-    region: "${BLOBSTORE_REGION}"
 EOF
 
   bosh finalize-release \
