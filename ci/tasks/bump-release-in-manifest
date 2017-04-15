@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -eu -o pipefail
 
 project_dir="$( cd "$( dirname "$0" )/../.." && pwd )"
 workspace_dir="$( cd "${project_dir}/.." && pwd )"
@@ -17,7 +17,7 @@ output_dir="${workspace_dir}/updated-bosh-bot"
 
 version="$( cat "${s3_release_dir}/version" )"
 url="$( cat "${s3_release_dir}/url" )"
-checksum="$( shasum ${s3_release_dir}/*.tgz | cut -d ' ' -f 1 )"
+checksum="$( sha1sum ${s3_release_dir}/*.tgz | cut -d ' ' -f 1 )"
 
 git clone "${project_dir}" "${output_dir}"
 

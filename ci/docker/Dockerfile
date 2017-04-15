@@ -2,7 +2,7 @@ FROM node:7.8-alpine
 
 RUN apk update && \
     apk --no-cache add \
-    ca-certificates wget bash git openssh
+    ca-certificates wget bash git openssh coreutils
 
 # the BOSH CLI is dynamically linked against glibc
 RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub && \
