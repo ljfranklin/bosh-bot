@@ -1,45 +1,41 @@
----
+instance_groups:
+- azs:
+  - z1
+  instances: 1
+  jobs:
+  - name: bosh-bot
+    properties:
+      bosh:
+        assets: ((bosh_bot_assets))
+        deployments: ((bosh_bot_deployments))
+        env: ((bosh_bot_env))
+        password: ((bosh_bot_password))
+        releases: ((bosh_bot_releases))
+        stemcells: ((bosh_bot_stemcells))
+        user: ((bosh_bot_user))
+      slack:
+        authorized_channels: ((bosh_bot_slack_authorized_channels))
+        authorized_usernames: ((bosh_bot_slack_authorized_usernames))
+        notification_channel: ((bosh_bot_slack_notification_channel))
+        token: ((bosh_bot_slack_token))
+    release: bosh-bot
+  name: bosh-bot
+  networks:
+  - name: private
+  stemcell: default
+  vm_type: bot
 name: bosh-bot
-
 releases:
 - name: bosh-bot
-  version: 0.0.6
-  url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.6.tgz
-  sha1: 0df129d2260c060ed460202cc4881947e7421d6e
-
+  sha1: null
+  url: https://storage.googleapis.com/bosh-bot-releases/bosh-bot-0.0.5.tgz
+  version: 0.0.5
 stemcells:
 - alias: default
   os: ubuntu-trusty
   version: latest
-
-instance_groups:
-- name: bosh-bot
-  instances: 1
-  azs: [z1]
-  jobs:
-  - name: bosh-bot
-    release: bosh-bot
-    properties:
-      slack:
-        token: ((bosh_bot_slack_token))
-        authorized_usernames: ((bosh_bot_slack_authorized_usernames))
-        authorized_channels: ((bosh_bot_slack_authorized_channels))
-        notification_channel: ((bosh_bot_slack_notification_channel))
-      bosh:
-        env: ((bosh_bot_env))
-        user: ((bosh_bot_user))
-        password: ((bosh_bot_password))
-        releases: ((bosh_bot_releases))
-        stemcells: ((bosh_bot_stemcells))
-        deployments: ((bosh_bot_deployments))
-        assets: ((bosh_bot_assets))
-  vm_type: bot
-  stemcell: default
-  networks:
-  - name: private
-
 update:
   canaries: 1
-  max_in_flight: 10
   canary_watch_time: 1000-30000
+  max_in_flight: 10
   update_watch_time: 1000-30000

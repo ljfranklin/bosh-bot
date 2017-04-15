@@ -1,33 +1,29 @@
----
-# This file can be used to co-located bosh-bot on your BOSH Director
-
-- type: replace
-  path: /releases/-
+- path: /releases/-
+  type: replace
   value:
     name: bosh-bot
-    version: 0.0.6
-    url: https://storage.googleapis.com/bosh-bot-ci/bosh-bot-0.0.6.tgz
-    sha1: 0df129d2260c060ed460202cc4881947e7421d6e
-
-- type: replace
-  path: /instance_groups/name=bosh/jobs/-
-  value: {name: bosh-bot, release: bosh-bot}
-
-- type: replace
-  path: /instance_groups/name=bosh/properties/slack?
+    sha1: null
+    url: https://storage.googleapis.com/bosh-bot-releases/bosh-bot-0.0.5.tgz
+    version: 0.0.5
+- path: /instance_groups/name=bosh/jobs/-
+  type: replace
   value:
-    token: ((bosh_bot_slack_token))
-    authorized_usernames: ((bosh_bot_slack_authorized_usernames))
+    name: bosh-bot
+    release: bosh-bot
+- path: /instance_groups/name=bosh/properties/slack?
+  type: replace
+  value:
     authorized_channels: ((bosh_bot_slack_authorized_channels))
+    authorized_usernames: ((bosh_bot_slack_authorized_usernames))
     notification_channel: ((bosh_bot_slack_notification_channel))
-
-- type: replace
-  path: /instance_groups/name=bosh/properties/bosh?
+    token: ((bosh_bot_slack_token))
+- path: /instance_groups/name=bosh/properties/bosh?
+  type: replace
   value:
+    assets: ((bosh_bot_assets))
+    deployments: ((bosh_bot_deployments))
+    env: ((bosh_hostname))
+    password: ((admin_password))
     releases: ((bosh_bot_releases))
     stemcells: ((bosh_bot_stemcells))
-    deployments: ((bosh_bot_deployments))
-    assets: ((bosh_bot_assets))
     user: admin
-    password: ((admin_password))
-    env: ((bosh_hostname))
