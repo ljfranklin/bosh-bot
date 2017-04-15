@@ -120,17 +120,26 @@ jobs:
               BLOBSTORE_SECRET_ACCESS_KEY: {{release_secret_key}}
               GIT_USER_NAME: {{release_git_user_name}}
               GIT_USER_EMAIL: {{release_git_user_email}}
-          - put: bosh-bot
-            params:
-              repository: updated-bosh-bot
-              merge: true
-              tag_prefix: v
-              tag: version/version
           - put: release
             params:
               file: "finalized-release/*.tgz"
           - put: version
             params: {file: version/version}
+          - task: bump-release-in-manifest
+            file: bosh-bot/ci/tasks/bump-release-in-manifest.yml
+            input_mapping:
+              bosh-bot: updated-bosh-bot
+            output_mapping:
+              updated-bosh-bot: final-bosh-bot
+            params:
+              GIT_USER_NAME: {{release_git_user_name}}
+              GIT_USER_EMAIL: {{release_git_user_email}}
+          - put: bosh-bot
+            params:
+              repository: final-bosh-bot
+              merge: true
+              tag_prefix: v
+              tag: version/version
     on_failure: *failure-alert
 
   - name: publish-minor-release

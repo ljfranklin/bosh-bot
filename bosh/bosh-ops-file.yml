@@ -28,8 +28,6 @@
     stemcells: ((bosh_bot_stemcells))
     deployments: ((bosh_bot_deployments))
     assets: ((bosh_bot_assets))
-    # existing director manifest variables
     user: admin
     password: ((admin_password))
-    # from terraform outputs
     env: ((bosh_hostname))

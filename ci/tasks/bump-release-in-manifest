@@ -1,0 +1,59 @@
+#!/bin/bash
+
+set -eu
+
+project_dir="$( cd "$( dirname "$0" )/../.." && pwd )"
+workspace_dir="$( cd "${project_dir}/.." && pwd )"
+
+# env
+: ${GIT_USER_NAME:?}
+: ${GIT_USER_EMAIL:?}
+
+# inputs
+s3_release_dir="${workspace_dir}/release"
+
+# outputs
+output_dir="${workspace_dir}/updated-bosh-bot"
+
+version="$( cat "${s3_release_dir}/version" )"
+url="$( cat "${s3_release_dir}/url" )"
+checksum="$( shasum ${s3_release_dir}/*.tgz | cut -d ' ' -f 1 )"
+
+git clone "${project_dir}" "${output_dir}"
+
+pushd "${output_dir}/bosh" > /dev/null
+  cat << EOF > /tmp/bosh-bot-bump-standalone.yml
+---
+- type: replace
+  path: /releases/name=bosh-bot
+  value:
+    name: bosh-bot
+    version: ${version}
+    url: ${url}
+    sha1: ${checksum}
+EOF
+  bosh interpolate bosh-manifest.yml \
+    -o /tmp/bosh-bot-bump-standalone.yml \
+    > /tmp/bosh-manifest-updated.yml
+  mv /tmp/bosh-manifest-updated.yml ./bosh-manifest.yml
+
+  cat << EOF > /tmp/bosh-bot-bump-colocated.yml
+---
+- type: replace
+  path: /0/value
+  value:
+    name: bosh-bot
+    version: ${version}
+    url: ${url}
+    sha1: ${checksum}
+EOF
+  bosh interpolate bosh-ops-file.yml \
+    -o /tmp/bosh-bot-bump-colocated.yml \
+    > /tmp/bosh-ops-file-updated.yml
+  mv /tmp/bosh-ops-file-updated.yml ./bosh-ops-file.yml
+
+  git add .
+  git config user.name "${GIT_USER_NAME}"
+  git config user.email "${GIT_USER_EMAIL}"
+  git commit -m "Bumping manifest to version ${version}"
+popd > /dev/null

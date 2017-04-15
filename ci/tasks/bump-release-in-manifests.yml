@@ -1,0 +1,21 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ljfranklin/bosh-bot
+
+inputs:
+  - name: bosh-bot
+  - name: release
+
+outputs:
+  - name: updated-bosh-bot
+
+run:
+  path: bosh-bot/ci/tasks/bump-release-in-manifest
+
+params:
+  GIT_USER_NAME: ""
+  GIT_USER_EMAIL: ""
