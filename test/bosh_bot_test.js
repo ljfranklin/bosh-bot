@@ -8,12 +8,14 @@ var BoshRunner = require('../src/bosh_runner');
 var BoshioClient = require('../src/boshio_client');
 var TestBot = require('../src/test_bot');
 var Assets = require('../src/assets');
+var UpgradeChecker = require('../src/actions/upgrade_checker');
 
 describe('BoshBot', function() {
   var testController;
   var alice;
   var fakeRunner;
   var fakeBoshio;
+  var fakeUpgradeChecker;
   var fakeAssets;
   var boshConfig;
   var fakeClock;
@@ -47,6 +49,7 @@ describe('BoshBot', function() {
     fakeRunner = td.object(BoshRunner());
     fakeBoshio = td.object(BoshioClient());
     fakeAssets = td.object(Assets());
+    fakeUpgradeChecker = td.object(UpgradeChecker({}));
 
     boshConfig = {
       env: 'https://my-bosh.com',
@@ -95,6 +98,9 @@ describe('BoshBot', function() {
       },
       './assets': function() {
         return fakeAssets;
+      },
+      './actions/upgrade_checker': function() {
+        return fakeUpgradeChecker;
       },
     });
 
@@ -468,29 +474,18 @@ Exit code 1`;
       fakeClock.tick('59:00');
       expect(testController.response()).to.be.nil;
 
-      var boshioVersions = {
-        'github.com/concourse/concourse': {
+      var newReleases = [
+        {
+          name: 'concourse',
           version: '2.5.0',
           url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
-        },
-        'github.com/cloudfoundry/garden-runc-release': {
-          version: '1.0.4',
-          url: 'https://bosh.io/d/github.com/cloudfoundry/garden-runc-release?v=1.0.4',
-        },
-      }
-      td.when(fakeBoshio.getLatestReleaseVersions(Object.keys(boshioVersions)))
-        .thenCallback(null, boshioVersions);
-
-      var directorVersions = {
-        'concourse': {
-          version: '2.4.0',
-        },
-        'garden-runc': {
-          version: '1.0.4',
-        },
-      }
-      td.when(fakeRunner.getLatestReleaseVersions())
-        .thenCallback(null, directorVersions);
+          displayName: 'concourse 2.5.0',
+        }
+      ];
+      td.when(fakeUpgradeChecker.upgradeableReleases())
+        .thenCallback(null, newReleases);
+      td.when(fakeUpgradeChecker.upgradeableStemcells())
+        .thenCallback(null, []);
 
       td.when(fakeRunner.uploadReleases(['https://bosh.io/d/github.com/concourse/concourse?v=2.5.0']))
         .thenCallback(null);
@@ -512,22 +507,10 @@ Exit code 1`;
       ];
       spawnBot();
 
-      var boshioVersions = {
-        'github.com/concourse/concourse': {
-          version: '2.5.0',
-          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
-        },
-      }
-      td.when(fakeBoshio.getLatestReleaseVersions(td.matchers.contains('github.com/concourse/concourse')))
-        .thenCallback(null, boshioVersions);
-
-      var directorVersions = {
-        concourse: {
-          version: '2.5.0',
-        },
-      }
-      td.when(fakeRunner.getLatestReleaseVersions())
-        .thenCallback(null, directorVersions);
+      td.when(fakeUpgradeChecker.upgradeableReleases())
+        .thenCallback(null, []);
+      td.when(fakeUpgradeChecker.upgradeableStemcells())
+        .thenCallback(null, []);
 
       fakeClock.tick('01:00:01');
 
@@ -546,22 +529,18 @@ Exit code 1`;
       ];
       spawnBot();
 
-      var boshioVersions = {
-        'github.com/concourse/concourse': {
+      var newReleases = [
+        {
+          name: 'concourse',
           version: '2.5.0',
           url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
-        },
-      }
-      td.when(fakeBoshio.getLatestReleaseVersions(td.matchers.contains('github.com/concourse/concourse')))
-        .thenCallback(null, boshioVersions);
-
-      var directorVersions = {
-        concourse: {
-          version: '2.4.0',
-        },
-      }
-      td.when(fakeRunner.getLatestReleaseVersions())
-        .thenCallback(null, directorVersions);
+          displayName: 'concourse 2.5.0',
+        }
+      ];
+      td.when(fakeUpgradeChecker.upgradeableReleases())
+        .thenCallback(null, newReleases);
+      td.when(fakeUpgradeChecker.upgradeableStemcells())
+        .thenCallback(null, []);
 
       td.when(fakeRunner.uploadReleases(['https://bosh.io/d/github.com/concourse/concourse?v=2.5.0']))
         .thenCallback(null);
@@ -596,23 +575,18 @@ Exit code 1`;
       fakeClock.tick('59:00');
       expect(testController.response()).to.be.nil;
 
-      var boshioVersions = {
-        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+      var newStemcells = [
+        {
           name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
           version: '3312.17',
           url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
-        },
-      }
-      td.when(fakeBoshio.getLatestStemcellVersions(td.matchers.contains('bosh-aws-xen-hvm-ubuntu-trusty-go_agent')))
-        .thenCallback(null, boshioVersions);
-
-      var directorVersions = {
-        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
-          version: '3312.16',
-        },
-      }
-      td.when(fakeRunner.getLatestStemcellVersions())
-        .thenCallback(null, directorVersions);
+          displayName: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent 3312.17',
+        }
+      ];
+      td.when(fakeUpgradeChecker.upgradeableReleases())
+        .thenCallback(null, []);
+      td.when(fakeUpgradeChecker.upgradeableStemcells())
+        .thenCallback(null, newStemcells);
 
       td.when(fakeRunner.uploadStemcells(['https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz']))
         .thenCallback(null);
@@ -624,41 +598,6 @@ Exit code 1`;
       expect(resp).to.contain('3312.17');
     });
 
-    it('does not upload stemcells if no newer versions exist', function() {
-      boshConfig.stemcells = [
-        {
-          boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
-        },
-      ];
-      boshConfig.releases = [];
-      spawnBot();
-
-      var boshioVersions = {
-        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
-          name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
-          version: '3312.17',
-          url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
-        },
-      }
-      td.when(fakeBoshio.getLatestStemcellVersions(td.matchers.contains('bosh-aws-xen-hvm-ubuntu-trusty-go_agent')))
-        .thenCallback(null, boshioVersions);
-
-      var directorVersions = {
-        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
-          version: '3312.17',
-        },
-      }
-      td.when(fakeRunner.getLatestStemcellVersions())
-        .thenCallback(null, directorVersions);
-
-      fakeClock.tick('01:00:01');
-
-      var resp = testController.response();
-      expect(resp, 'response found').to.be.null;
-
-      td.verify(fakeRunner.uploadStemcells(), {times: 0, ignoreExtraArgs: true})
-    });
-
     it('checks for new stemcells on `upgrade`', function() {
       boshConfig.stemcells = [
         {
@@ -668,23 +607,18 @@ Exit code 1`;
       boshConfig.releases = [];
       spawnBot();
 
-      var boshioVersions = {
-        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
+      var newStemcells = [
+        {
           name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
           version: '3312.17',
           url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
-        },
-      }
-      td.when(fakeBoshio.getLatestStemcellVersions(td.matchers.contains('bosh-aws-xen-hvm-ubuntu-trusty-go_agent')))
-        .thenCallback(null, boshioVersions);
-
-      var directorVersions = {
-        'bosh-aws-xen-hvm-ubuntu-trusty-go_agent': {
-          version: '3312.16',
-        },
-      }
-      td.when(fakeRunner.getLatestStemcellVersions())
-        .thenCallback(null, directorVersions);
+          displayName: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent 3312.17',
+        }
+      ];
+      td.when(fakeUpgradeChecker.upgradeableReleases())
+        .thenCallback(null, []);
+      td.when(fakeUpgradeChecker.upgradeableStemcells())
+        .thenCallback(null, newStemcells);
 
       td.when(fakeRunner.uploadStemcells(['https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz']))
         .thenCallback(null);

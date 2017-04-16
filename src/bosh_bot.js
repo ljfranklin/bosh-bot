@@ -4,6 +4,7 @@ var async = require('async');
 var BoshRunner = require('./bosh_runner');
 var BoshioClient = require('./boshio_client');
 var Assets = require('./assets');
+var UpgradeChecker = require('./actions/upgrade_checker');
 
 function BoshBot(config) {
   var boshbot = {
@@ -30,6 +31,13 @@ function BoshBot(config) {
   var runner = BoshRunner(config);
   runner.precheck();
 
+  var checker = UpgradeChecker({
+    boshRunner: runner,
+    boshioClient: boshioClient,
+    stemcells: config.stemcells,
+    releases: config.releases,
+  });
+
   boshbot.setup = function(controller, defaultChannel, setupCb) {
     controller.middleware.heard.use(function(bot, message, next) {
       if (boshbot.authorizedChannelIDs.length > 0 && boshbot.authorizedChannelIDs.includes(message.channel) == false) {
@@ -49,7 +57,7 @@ function BoshBot(config) {
     });
 
     controller.hears('ping',['direct_message','direct_mention','mention'],function(bot,message) {
-			bot.reply(message, `<@${message.user}> pong`);
+      bot.reply(message, `<@${message.user}> pong`);
     });
 
     controller.hears('env',['direct_message','direct_mention','mention'],function(bot,message) {
@@ -151,55 +159,6 @@ function BoshBot(config) {
       bot.reply(message, `<@${message.user}> Let me know our destination with *'deploy DESTINATION'*.`);
     });
 
-    controller.getReleasesToUpdate = function(cb) {
-      if (boshbot.releases.length == 0) {
-        cb(null, []);
-        return;
-      }
-
-      var releaseIDs = boshbot.releases.map(function(release) {
-        return release.boshio_id;
-      });
-      boshioClient.getLatestReleaseVersions(releaseIDs, function(err, boshioVersions) {
-        if (err != null) {
-          cb(err, []);
-          return;
-        }
-
-        runner.getLatestReleaseVersions(function(err, directorVersions) {
-          if (err != null) {
-            cb(err, []);
-            return;
-          }
-
-          var releasesToUpload = boshbot.releases.map(function(release) {
-            var boshioID = release.boshio_id;
-            var boshioResult = boshioVersions[boshioID];
-            var directorResult = directorVersions[release.name] || { version: '0.0.0' };
-
-            // TODO: cleanup semver matching
-            while (boshioResult.version.match(/\./g).length < 2) {
-              boshioResult.version += '.0';
-            }
-            while (directorResult.version.match(/\./g).length < 2) {
-              directorResult.version += '.0';
-            }
-            if (semver.gt(boshioResult.version, directorResult.version)) {
-              return {
-                name: release.name,
-                url: boshioResult.url,
-                version: boshioResult.version,
-                displayName: `${release.name} ${boshioResult.version}`,
-              };
-            }
-            return null;
-          }).filter(function(element) { return element != null });
-
-          cb(null, releasesToUpload);
-        });
-      });
-    };
-
     controller.updateReleases = function(releasesToUpload, cb) {
       if (releasesToUpload.length == 0) {
         cb(null, []);
@@ -219,58 +178,6 @@ function BoshBot(config) {
         }
 
         cb(null, releasesToUpload);
-      });
-    };
-
-    controller.getStemcellsToUpdate = function(cb) {
-      if (boshbot.stemcells.length == 0) {
-        cb(null, []);
-        return;
-      }
-
-      var stemcellIDs = boshbot.stemcells.map(function(stemcell) {
-        return stemcell.boshio_id;
-      });
-
-      boshioClient.getLatestStemcellVersions(stemcellIDs, function(err, boshioVersions) {
-        if (err != null) {
-          cb(err, []);
-          return;
-        }
-
-        runner.getLatestStemcellVersions(function(err, directorVersions) {
-          if (err != null) {
-            cb(err, []);
-            return;
-          }
-
-          var stemcellsToUpload = boshbot.stemcells.map(function(stemcell) {
-            var boshioID = stemcell.boshio_id;
-            var boshioResult = boshioVersions[boshioID];
-            var directorResult = directorVersions[boshioID] || { version: '0.0.0' };
-
-            // TODO: cleanup semver matching
-            boshioVersion = boshioResult.version;
-            while (boshioVersion.match(/\./g).length < 2) {
-              boshioVersion += '.0';
-            }
-            directorVersion = directorResult.version;
-            while (directorVersion.match(/\./g).length < 2) {
-              directorVersion += '.0';
-            }
-            if (semver.gt(boshioVersion, directorVersion)) {
-              return {
-                name: boshioResult.name,
-                url: boshioResult.url,
-                version: boshioResult.version,
-                displayName: `${boshioResult.name} ${boshioResult.version}`,
-              };
-            }
-            return null;
-          }).filter(function(element) { return element != null });
-
-          cb(null, stemcellsToUpload);
-        });
       });
     };
 
@@ -294,7 +201,7 @@ function BoshBot(config) {
     setInterval(function() {
       async.parallel([
         function(cb) {
-          controller.getReleasesToUpdate(function(err, releasesToUpdate) {
+          checker.upgradeableReleases(function(err, releasesToUpdate) {
             if (err) {
               cb(err);
               return;
@@ -303,7 +210,7 @@ function BoshBot(config) {
           });
         },
         function(cb) {
-          controller.getStemcellsToUpdate(function(err, stemcellsToUpdate) {
+          checker.upgradeableStemcells(function(err, stemcellsToUpdate) {
             if (err) {
               cb(err);
               return;
@@ -346,8 +253,8 @@ function BoshBot(config) {
     controller.hears('upgrade',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Let's see if any flight upgrades are available...`);
       async.parallel([
-        controller.getReleasesToUpdate,
-        controller.getStemcellsToUpdate,
+        checker.upgradeableReleases,
+        checker.upgradeableStemcells,
       ],
       function(err, results) {
         if (err) {
@@ -394,7 +301,7 @@ function BoshBot(config) {
       bot.reply(message, `<@${message.user}> Sorry, didn't catch that...`);
     });
 
-		assets.fetchAll(boshbot.assets, setupCb);
+    assets.fetchAll(boshbot.assets, setupCb);
   };
 
   return boshbot;
