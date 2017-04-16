@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 var td = require('testdouble');
 
 var BoshRunner = require('../../src/bosh_runner');
-var UpgradeApplier = require('../../src/actions/upgrade_applier');
+var UpgradeApplier = require('../../src/upgrade/applier');
 
 describe('UpgradeApplier', function() {
 

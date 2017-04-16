@@ -8,8 +8,8 @@ var BoshRunner = require('../src/bosh_runner');
 var BoshioClient = require('../src/boshio_client');
 var TestBot = require('../src/test_bot');
 var Assets = require('../src/assets');
-var UpgradeChecker = require('../src/actions/upgrade_checker');
-var UpgradeApplier = require('../src/actions/upgrade_applier');
+var UpgradeChecker = require('../src/upgrade/checker');
+var UpgradeApplier = require('../src/upgrade/applier');
 
 describe('BoshBot', function() {
   var testController;
@@ -102,10 +102,10 @@ describe('BoshBot', function() {
       './assets': function() {
         return fakeAssets;
       },
-      './actions/upgrade_checker': function() {
+      './upgrade/checker': function() {
         return fakeUpgradeChecker;
       },
-      './actions/upgrade_applier': function() {
+      './upgrade/applier': function() {
         return fakeUpgradeApplier;
       },
     });

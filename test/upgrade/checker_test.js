@@ -3,7 +3,7 @@ var td = require('testdouble');
 
 var BoshRunner = require('../../src/bosh_runner');
 var BoshioClient = require('../../src/boshio_client');
-var UpgradeChecker = require('../../src/actions/upgrade_checker');
+var UpgradeChecker = require('../../src/upgrade/checker');
 
 describe('UpgradeChecker', function() {
 

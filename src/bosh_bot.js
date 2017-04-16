@@ -4,8 +4,8 @@ var async = require('async');
 var BoshRunner = require('./bosh_runner');
 var BoshioClient = require('./boshio_client');
 var Assets = require('./assets');
-var UpgradeChecker = require('./actions/upgrade_checker');
-var UpgradeApplier = require('./actions/upgrade_applier');
+var UpgradeChecker = require('./upgrade/checker');
+var UpgradeApplier = require('./upgrade/applier');
 
 function BoshBot(config) {
   var boshbot = {
