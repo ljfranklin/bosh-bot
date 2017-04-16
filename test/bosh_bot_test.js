@@ -9,6 +9,7 @@ var BoshioClient = require('../src/boshio_client');
 var TestBot = require('../src/test_bot');
 var Assets = require('../src/assets');
 var UpgradeChecker = require('../src/actions/upgrade_checker');
+var UpgradeApplier = require('../src/actions/upgrade_applier');
 
 describe('BoshBot', function() {
   var testController;
@@ -16,6 +17,7 @@ describe('BoshBot', function() {
   var fakeRunner;
   var fakeBoshio;
   var fakeUpgradeChecker;
+  var fakeUpgradeApplier;
   var fakeAssets;
   var boshConfig;
   var fakeClock;
@@ -50,6 +52,7 @@ describe('BoshBot', function() {
     fakeBoshio = td.object(BoshioClient());
     fakeAssets = td.object(Assets());
     fakeUpgradeChecker = td.object(UpgradeChecker({}));
+    fakeUpgradeApplier = td.object(UpgradeApplier({}));
 
     boshConfig = {
       env: 'https://my-bosh.com',
@@ -101,6 +104,9 @@ describe('BoshBot', function() {
       },
       './actions/upgrade_checker': function() {
         return fakeUpgradeChecker;
+      },
+      './actions/upgrade_applier': function() {
+        return fakeUpgradeApplier;
       },
     });
 
@@ -487,8 +493,8 @@ Exit code 1`;
       td.when(fakeUpgradeChecker.upgradeableStemcells())
         .thenCallback(null, []);
 
-      td.when(fakeRunner.uploadReleases(['https://bosh.io/d/github.com/concourse/concourse?v=2.5.0']))
-        .thenCallback(null);
+      td.when(fakeUpgradeApplier.upgradeReleases(newReleases))
+        .thenCallback(null, newReleases);
       fakeClock.tick('01:01');
 
       var resp = testController.response();
@@ -517,7 +523,7 @@ Exit code 1`;
       var resp = testController.response();
       expect(resp, 'response found').to.be.null;
 
-      td.verify(fakeRunner.uploadReleases(), {times: 0, ignoreExtraArgs: true})
+      td.verify(fakeUpgradeApplier.upgradeReleases(), {times: 0, ignoreExtraArgs: true})
     });
 
     it('checks for new releases on `upgrade`', function() {
@@ -542,8 +548,8 @@ Exit code 1`;
       td.when(fakeUpgradeChecker.upgradeableStemcells())
         .thenCallback(null, []);
 
-      td.when(fakeRunner.uploadReleases(['https://bosh.io/d/github.com/concourse/concourse?v=2.5.0']))
-        .thenCallback(null);
+      td.when(fakeUpgradeApplier.upgradeReleases(newReleases))
+        .thenCallback(null, newReleases);
 
       alice.say('@bot upgrade!');
 
@@ -588,8 +594,8 @@ Exit code 1`;
       td.when(fakeUpgradeChecker.upgradeableStemcells())
         .thenCallback(null, newStemcells);
 
-      td.when(fakeRunner.uploadStemcells(['https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz']))
-        .thenCallback(null);
+      td.when(fakeUpgradeApplier.upgradeStemcells(newStemcells))
+        .thenCallback(null, newStemcells);
       fakeClock.tick('01:01');
 
       var resp = testController.response();
@@ -620,8 +626,8 @@ Exit code 1`;
       td.when(fakeUpgradeChecker.upgradeableStemcells())
         .thenCallback(null, newStemcells);
 
-      td.when(fakeRunner.uploadStemcells(['https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz']))
-        .thenCallback(null);
+      td.when(fakeUpgradeApplier.upgradeStemcells(newStemcells))
+        .thenCallback(null, newStemcells);
 
       alice.say('@bot upgrade!');
 

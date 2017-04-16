@@ -5,6 +5,7 @@ var BoshRunner = require('./bosh_runner');
 var BoshioClient = require('./boshio_client');
 var Assets = require('./assets');
 var UpgradeChecker = require('./actions/upgrade_checker');
+var UpgradeApplier = require('./actions/upgrade_applier');
 
 function BoshBot(config) {
   var boshbot = {
@@ -36,6 +37,10 @@ function BoshBot(config) {
     boshioClient: boshioClient,
     stemcells: config.stemcells,
     releases: config.releases,
+  });
+
+  var upgrader = UpgradeApplier({
+    boshRunner: runner,
   });
 
   boshbot.setup = function(controller, defaultChannel, setupCb) {
@@ -159,45 +164,6 @@ function BoshBot(config) {
       bot.reply(message, `<@${message.user}> Let me know our destination with *'deploy DESTINATION'*.`);
     });
 
-    controller.updateReleases = function(releasesToUpload, cb) {
-      if (releasesToUpload.length == 0) {
-        cb(null, []);
-        return;
-      }
-
-      var releaseURLsToUpload = releasesToUpload.map(function(r) { return r.url; });
-      if (releaseURLsToUpload.length == 0) {
-        cb(null, []);
-        return;
-      }
-
-      runner.uploadReleases(releaseURLsToUpload, function(err) {
-        if (err != null) {
-          cb(err, []);
-          return;
-        }
-
-        cb(null, releasesToUpload);
-      });
-    };
-
-    controller.updateStemcells = function(stemcellsToUpload, cb) {
-      var stemcellURLsToUpload = stemcellsToUpload.map(function(r) { return r.url; });
-      if (stemcellURLsToUpload.length == 0) {
-        cb(null, []);
-        return;
-      }
-
-      runner.uploadStemcells(stemcellURLsToUpload, function(err) {
-        if (err != null) {
-          cb(err, []);
-          return;
-        }
-
-        cb(null, stemcellsToUpload);
-      });
-    };
-
     setInterval(function() {
       async.parallel([
         function(cb) {
@@ -206,7 +172,11 @@ function BoshBot(config) {
               cb(err);
               return;
             }
-            controller.updateReleases(releasesToUpdate, cb);
+            if (releasesToUpdate.length == 0) {
+              cb(null, []);
+              return;
+            }
+            upgrader.upgradeReleases(releasesToUpdate, cb);
           });
         },
         function(cb) {
@@ -215,7 +185,11 @@ function BoshBot(config) {
               cb(err);
               return;
             }
-            controller.updateStemcells(stemcellsToUpdate, cb);
+            if (stemcellsToUpdate.length == 0) {
+              cb(null, []);
+              return;
+            }
+            upgrader.upgradeStemcells(stemcellsToUpdate, cb);
           });
         },
       ],
@@ -284,10 +258,18 @@ function BoshBot(config) {
 
         async.parallel([
           function(cb) {
-            controller.updateReleases(releasesToUpload, cb);
+            if (releasesToUpload.length == 0) {
+              cb(null, []);
+              return;
+            }
+            upgrader.upgradeReleases(releasesToUpload, cb);
           },
           function(cb) {
-            controller.updateStemcells(stemcellsToUpload, cb);
+            if (stemcellsToUpload.length == 0) {
+              cb(null, []);
+              return;
+            }
+            upgrader.upgradeStemcells(stemcellsToUpload, cb);
           },
         ], function(err, _) {
           bot.reply(message, `<@${message.user}> Your tickets have been upgraded! Board the plane by telling me 'deploy DESTINATION'.`);
