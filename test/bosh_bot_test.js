@@ -10,6 +10,7 @@ var TestBot = require('../src/test_bot');
 var Assets = require('../src/assets');
 var UpgradeChecker = require('../src/upgrade/checker');
 var UpgradeApplier = require('../src/upgrade/applier');
+var UpgradeConvo = require('../src/upgrade/convo');
 
 describe('BoshBot', function() {
   var testController;
@@ -18,6 +19,7 @@ describe('BoshBot', function() {
   var fakeBoshio;
   var fakeUpgradeChecker;
   var fakeUpgradeApplier;
+  var fakeUpgradeConvo;
   var fakeAssets;
   var boshConfig;
   var fakeClock;
@@ -53,6 +55,7 @@ describe('BoshBot', function() {
     fakeAssets = td.object(Assets());
     fakeUpgradeChecker = td.object(UpgradeChecker({}));
     fakeUpgradeApplier = td.object(UpgradeApplier({}));
+    fakeUpgradeConvo = td.object(UpgradeConvo({}));
 
     boshConfig = {
       env: 'https://my-bosh.com',
@@ -107,6 +110,9 @@ describe('BoshBot', function() {
       },
       './upgrade/applier': function() {
         return fakeUpgradeApplier;
+      },
+      './upgrade/convo': function() {
+        return fakeUpgradeConvo;
       },
     });
 
@@ -464,187 +470,10 @@ Exit code 1`;
       alice.say('@bot takeoff!');
     });
 
-    it('uploads new releases to the director on a timer', function() {
-      boshConfig.releases = [
-        {
-          name: 'concourse',
-          boshio_id: 'github.com/concourse/concourse',
-        },
-        {
-          name: 'garden-runc',
-          boshio_id: 'github.com/cloudfoundry/garden-runc-release',
-        },
-      ];
+    it('adds the upgrade convos', function() {
       spawnBot();
 
-      fakeClock.tick('59:00');
-      expect(testController.response()).to.be.nil;
-
-      var newReleases = [
-        {
-          name: 'concourse',
-          version: '2.5.0',
-          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
-          displayName: 'concourse 2.5.0',
-        }
-      ];
-      td.when(fakeUpgradeChecker.upgradeableReleases())
-        .thenCallback(null, newReleases);
-      td.when(fakeUpgradeChecker.upgradeableStemcells())
-        .thenCallback(null, []);
-
-      td.when(fakeUpgradeApplier.upgradeReleases(newReleases))
-        .thenCallback(null, newReleases);
-      fakeClock.tick('01:01');
-
-      var resp = testController.response();
-      expect(resp, 'no response found').to.not.be.null;
-      expect(resp).to.contain('concourse');
-      expect(resp).to.contain('2.5.0');
-      expect(resp).to.not.contain('garden-runc');
-    });
-
-    it('does not upload releases if no newer versions exist', function() {
-      boshConfig.releases = [
-        {
-          name: 'concourse',
-          boshio_id: 'github.com/concourse/concourse',
-        },
-      ];
-      spawnBot();
-
-      td.when(fakeUpgradeChecker.upgradeableReleases())
-        .thenCallback(null, []);
-      td.when(fakeUpgradeChecker.upgradeableStemcells())
-        .thenCallback(null, []);
-
-      fakeClock.tick('01:00:01');
-
-      var resp = testController.response();
-      expect(resp, 'response found').to.be.null;
-
-      td.verify(fakeUpgradeApplier.upgradeReleases(), {times: 0, ignoreExtraArgs: true})
-    });
-
-    it('checks for new releases on `upgrade`', function() {
-      boshConfig.releases = [
-        {
-          name: 'concourse',
-          boshio_id: 'github.com/concourse/concourse',
-        },
-      ];
-      spawnBot();
-
-      var newReleases = [
-        {
-          name: 'concourse',
-          version: '2.5.0',
-          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
-          displayName: 'concourse 2.5.0',
-        }
-      ];
-      td.when(fakeUpgradeChecker.upgradeableReleases())
-        .thenCallback(null, newReleases);
-      td.when(fakeUpgradeChecker.upgradeableStemcells())
-        .thenCallback(null, []);
-
-      td.when(fakeUpgradeApplier.upgradeReleases(newReleases))
-        .thenCallback(null, newReleases);
-
-      alice.say('@bot upgrade!');
-
-      var responses = testController.responses();
-      expect(responses.length).to.equal(3);
-      expect(responses[0], 'no response found').to.not.be.null;
-      expect(responses[0]).to.contain('alice');
-      expect(responses[0]).to.contain('upgrades');
-
-      expect(responses[1], 'no response found').to.not.be.null;
-      expect(responses[1]).to.contain('alice');
-      expect(responses[1]).to.contain('concourse');
-      expect(responses[1]).to.contain('2.5.0');
-
-      expect(responses[2], 'no response found').to.not.be.null;
-      expect(responses[2]).to.contain('alice');
-      expect(responses[2]).to.contain('upgraded');
-    });
-
-    it('uploads new stemcells to the director on a timer', function() {
-      boshConfig.stemcells = [
-        {
-          boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
-        },
-      ];
-      boshConfig.releases = [];
-      spawnBot();
-
-      fakeClock.tick('59:00');
-      expect(testController.response()).to.be.nil;
-
-      var newStemcells = [
-        {
-          name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
-          version: '3312.17',
-          url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
-          displayName: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent 3312.17',
-        }
-      ];
-      td.when(fakeUpgradeChecker.upgradeableReleases())
-        .thenCallback(null, []);
-      td.when(fakeUpgradeChecker.upgradeableStemcells())
-        .thenCallback(null, newStemcells);
-
-      td.when(fakeUpgradeApplier.upgradeStemcells(newStemcells))
-        .thenCallback(null, newStemcells);
-      fakeClock.tick('01:01');
-
-      var resp = testController.response();
-      expect(resp, 'no response found').to.not.be.null;
-      expect(resp).to.contain('bosh-aws-xen-hvm-ubuntu-trusty-go_agent');
-      expect(resp).to.contain('3312.17');
-    });
-
-    it('checks for new stemcells on `upgrade`', function() {
-      boshConfig.stemcells = [
-        {
-          boshio_id: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
-        },
-      ];
-      boshConfig.releases = [];
-      spawnBot();
-
-      var newStemcells = [
-        {
-          name: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent',
-          version: '3312.17',
-          url: 'https://s3.amazonaws.com/bosh-aws-light-stemcells/light-bosh-stemcell-3312.17-aws-xen-hvm-ubuntu-trusty-go_agent.tgz',
-          displayName: 'bosh-aws-xen-hvm-ubuntu-trusty-go_agent 3312.17',
-        }
-      ];
-      td.when(fakeUpgradeChecker.upgradeableReleases())
-        .thenCallback(null, []);
-      td.when(fakeUpgradeChecker.upgradeableStemcells())
-        .thenCallback(null, newStemcells);
-
-      td.when(fakeUpgradeApplier.upgradeStemcells(newStemcells))
-        .thenCallback(null, newStemcells);
-
-      alice.say('@bot upgrade!');
-
-      var responses = testController.responses();
-      expect(responses.length).to.eql(3);
-      expect(responses[0], 'no response found').to.not.be.null;
-      expect(responses[0]).to.contain('alice');
-      expect(responses[0]).to.contain('upgrades');
-
-      expect(responses[1], 'no response found').to.not.be.null;
-      expect(responses[1]).to.contain('alice');
-      expect(responses[1]).to.contain('aws');
-      expect(responses[1]).to.contain('3312.17');
-
-      expect(responses[2], 'no response found').to.not.be.null;
-      expect(responses[2]).to.contain('alice');
-      expect(responses[2]).to.contain('upgraded');
+      td.verify(fakeUpgradeConvo.addListeners(testController));
     });
 
     it('pulls a public git repo on `deploy`', function() {
