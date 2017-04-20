@@ -47,24 +47,6 @@ describe('UpgradeConvo', function() {
     convo = UpgradeConvo({
       checker: fakeUpgradeChecker,
       applier: fakeUpgradeApplier,
-      stemcells: [
-        // {
-        //   boshio_id: 'newer-stemcell',
-        // },
-        // {
-        //   boshio_id: 'older-stemcell',
-        // }
-      ],
-      releases: [
-        {
-          name: 'concourse',
-          boshio_id: 'github.com/concourse/concourse',
-        },
-        {
-          name: 'garden-runc',
-          boshio_id: 'github.com/cloudfoundry/garden-runc-release',
-        },
-      ],
     });
 
     convo.addListeners(testController);

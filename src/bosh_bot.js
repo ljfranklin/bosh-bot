@@ -7,6 +7,7 @@ var Assets = require('./assets');
 var UpgradeChecker = require('./upgrade/checker');
 var UpgradeApplier = require('./upgrade/applier');
 var UpgradeConvo = require('./upgrade/convo');
+var DeployConvo = require('./deploy/convo');
 
 function BoshBot(config) {
   var boshbot = {
@@ -52,6 +53,14 @@ function BoshBot(config) {
       defaultChannel: defaultChannel,
     });
     upgradeConvo.addListeners(controller);
+
+    var deployConvo = DeployConvo({
+      deployments: boshbot.deployments,
+      assetsFetcher: assets,
+      assets: boshbot.assets,
+      runner: runner,
+    });
+    deployConvo.addListeners(controller);
 
     controller.middleware.heard.use(function(bot, message, next) {
       if (boshbot.authorizedChannelIDs.length > 0 && boshbot.authorizedChannelIDs.includes(message.channel) == false) {
