@@ -1,6 +1,3 @@
-var semver = require('semver');
-var async = require('async');
-
 var BoshRunner = require('./bosh_runner');
 var BoshioClient = require('./boshio_client');
 var Assets = require('./assets');
@@ -85,101 +82,6 @@ function BoshBot(config) {
 
     controller.hears('env',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Currently targeting *${boshbot.env}*.`);
-    });
-
-    controller.hears('deploy ([a-zA-Z0-9\-\_]+)',['direct_message','direct_mention','mention'],function(bot,message) {
-      var deploymentName = message.match[1];
-
-      var deployment = boshbot.deployments.find(function(d) {
-        return (d.name == deploymentName);
-      });
-
-      if (deployment == null) {
-        var knownDeploymentNames = boshbot.deployments.map(function(d) { return `*${d.name}*`; });
-        bot.reply(message, `<@${message.user}> I'm afraid my navigator doesn't know the destination *${deploymentName}*. The destinations we know about are: ${knownDeploymentNames.join(', ')}.`);
-        return;
-      }
-
-      var assetsToFetch = deployment.assets.map(function(assetName) {
-        return boshbot.assets.find(function(a) { return a.name == assetName });
-      });
-      if (assetsToFetch.length > 0) {
-        bot.reply(message, `<@${message.user}> Give us a minute to load your assets onto the plane...`);
-      }
-      assets.fetchAll(assetsToFetch, function(assetsErr) {
-        if (assetsErr) {
-          bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${assetsErr}.`);
-          return;
-        }
-
-        var deployOpts = {
-          name: deploymentName,
-          manifest_path: deployment.manifest_path,
-          vars: deployment.vars,
-          var_files: deployment.var_files,
-          vars_files: deployment.vars_files,
-          ops_files: deployment.ops_files,
-          vars_store: deployment.vars_store,
-        };
-
-        runner.showDiff(deployOpts, function(err, diffOutput) {
-          if (err) {
-            bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${err}.`);
-            return;
-          }
-
-          bot.startConversation(message,function(err,convo) {
-            if (err) {
-              bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${err}.`);
-              return;
-            }
-
-            var prompt = `<@${message.user}> Here's our flight plan for today:\n*${diffOutput}*\nRespond with *'takeoff'* when you're ready!`;
-            convo.ask(prompt, [{ pattern: 'takeoff', callback: function(response,convo) {
-              var taskID = null;
-              var taskStarted = function(id, cancelCb) {
-                taskID = id;
-
-                var cancelPrompt = `<@${message.user}> We're off! Run \`bosh task ${taskID}\` to track the flight, and respond with *'mayday'* to perform an emergency landing.`;
-                convo.ask(cancelPrompt, [{ pattern: 'mayday', callback: function(response, convo) {
-                  convo.say(`<@${message.user}> Hold on tight, this may get a little bumpy...`);
-                  cancelCb();
-                  convo.next();
-                }}]);
-                convo.next();
-              };
-
-              var taskEnded = function(err, shouldRedact) {
-                var response;
-                if (err == null) {
-                  response = `Another successful landing, the deploy is finished!`;
-                } else if (taskID != null) {
-                  response = `Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`;
-                } else {
-                  response = 'Apologies for the delay folks. We need to fix a mechanical problem before take-off.';
-                }
-                if (err && shouldRedact == false) {
-                  response += `\nReport: ${err}`
-                }
-
-                bot.reply(message, `<@${message.user}> ${response}`);
-
-                if (convo.isActive()) {
-                  convo.stop();
-                }
-              };
-              runner.deploy(deployOpts, taskStarted, taskEnded);
-            }}, { default: true, callback: function(response, convo) {
-              convo.say(`<@${message.user}> I guess you don't want to *'takeoff'* after all...`);
-              convo.next();
-            }}]);
-          });
-        });
-      });
-    });
-
-    controller.hears('takeoff',['direct_message','direct_mention','mention'],function(bot,message) {
-      bot.reply(message, `<@${message.user}> Let me know our destination with *'deploy DESTINATION'*.`);
     });
 
     controller.hears('.*',['direct_message','direct_mention','mention'],function(bot,message) {

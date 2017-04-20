@@ -1,9 +1,6 @@
 var expect = require('chai').expect;
 var td = require('testdouble');
 var proxyquire = require('proxyquire');
-var lolex = require("lolex");
-var Readable = require('stream').Readable;
-var ChildProcess = require('child_process').ChildProcess;
 var BoshRunner = require('../src/bosh_runner');
 var BoshioClient = require('../src/boshio_client');
 var TestBot = require('../src/test_bot');
@@ -24,12 +21,9 @@ describe('BoshBot', function() {
   var fakeDeployConvo;
   var fakeAssets;
   var boshConfig;
-  var fakeClock;
   var fakeApi;
 
   beforeEach(function() {
-    fakeClock = lolex.install();
-
     testController = TestBot();
     testController.spawn();
 
@@ -64,6 +58,24 @@ describe('BoshBot', function() {
       env: 'https://my-bosh.com',
       user: 'admin',
       password: 'fake-password',
+      stemcells: [
+        {
+          boshio_id: 'newer-stemcell',
+        },
+        {
+          boshio_id: 'older-stemcell',
+        }
+      ],
+      releases: [
+        {
+          name: 'new',
+          boshio_id: 'newer-release',
+        },
+        {
+          name: 'old',
+          boshio_id: 'older-release',
+        }
+      ],
       assets: [
         {
           name: 'concourse',
@@ -90,7 +102,6 @@ describe('BoshBot', function() {
   });
 
   afterEach(function(){
-    fakeClock.uninstall();
     td.reset();
   });
 
@@ -105,19 +116,40 @@ describe('BoshBot', function() {
       './boshio_client': function() {
         return fakeBoshio;
       },
-      './assets': function() {
+      './assets': function(config) {
+        expect(config.dir).to.eql('/tmp');
         return fakeAssets;
       },
-      './upgrade/checker': function() {
+      './upgrade/checker': function(config) {
+        expect(config).to.eql({
+          boshRunner: fakeRunner,
+          boshioClient: fakeBoshio,
+          stemcells: boshConfig.stemcells,
+          releases: boshConfig.releases,
+        });
         return fakeUpgradeChecker;
       },
-      './upgrade/applier': function() {
+      './upgrade/applier': function(config) {
+        expect(config).to.eql({
+          boshRunner: fakeRunner,
+        });
         return fakeUpgradeApplier;
       },
-      './upgrade/convo': function() {
+      './upgrade/convo': function(config) {
+        expect(config).to.eql({
+          checker: fakeUpgradeChecker,
+          upgrader: fakeUpgradeApplier,
+          defaultChannel: 'general',
+        });
         return fakeUpgradeConvo;
       },
-      './deploy/convo': function() {
+      './deploy/convo': function(config) {
+        expect(config).to.eql({
+          deployments: boshConfig.deployments,
+          assetsFetcher: fakeAssets,
+          assets: boshConfig.assets,
+          runner: fakeRunner,
+        });
         return fakeDeployConvo;
       },
     });
