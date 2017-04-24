@@ -15,8 +15,6 @@ function BoshBot(config) {
     releases: config.releases || [],
     stemcells: config.stemcells || [],
     assets: config.assets || [],
-    authorizedUserIDs: config.authorizedUserIDs || [],
-    authorizedChannelIDs: config.authorizedChannelIDs || [],
   };
 
   // TODO: random tmp dir?
@@ -58,19 +56,6 @@ function BoshBot(config) {
       runner: runner,
     });
     deployConvo.addListeners(controller);
-
-    controller.middleware.heard.use(function(bot, message, next) {
-      if (boshbot.authorizedChannelIDs.length > 0 && boshbot.authorizedChannelIDs.includes(message.channel) == false) {
-        // do not response
-        return;
-      }
-
-      if (boshbot.authorizedUserIDs.includes(message.user)) {
-        next();
-      } else {
-        bot.reply(message, `<@${message.user}> I'm afraid you don't have a ticket for this flight. Please see one of our authorized staff to get this sorted out.`);
-      }
-    });
 
     controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
       bot.reply(message, `<@${message.user}> Hello yourself.`);

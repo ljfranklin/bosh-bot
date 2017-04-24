@@ -3,6 +3,8 @@ var fs = require('fs');
 var Botkit = require('botkit');
 var BoshBot = require('./src/bosh_bot');
 var Config = require('./src/config');
+var Slack = require('./src/slack/slack');
+var SlackAuth = require('./src/slack/auth');
 
 console.log('Spinning up...');
 
@@ -21,49 +23,25 @@ if (loadErr) {
 }
 
 console.log('Starting bot...');
-var controller = Botkit.slackbot({
-  debug: false,
-  retry: 10
-});
-slackbot = controller.spawn({
+var slack = Slack({
   token: config.get('slack.token'),
-  retry: Infinity,
 });
-slackbot.startRTM(function(err,bot,response) {
+slack.start(function(err, controller, response) {
   if (err) {
     console.error(err);
     process.exit(1);
   }
 
-  var usernamesToIDs = [];
-  response.users.forEach(function(member) {
-    usernamesToIDs[member.name] = member.id;
+  var auth = SlackAuth({
+    authorizedUsers: config.get('slack').authorized_usernames,
+    authorizedChannels: config.get('slack').authorized_channels,
   });
 
-  config.get('bosh').authorizedUserIDs = [];
-  config.get('slack').authorized_usernames.forEach(function(name) {
-    if (usernamesToIDs[name]) {
-      config.get('bosh').authorizedUserIDs.push(usernamesToIDs[name]);
-    } else {
-      console.error(new Error(`Couldn't find a Slack user with username '${name}'`));
-      process.exit(1);
-    }
-  });
-
-  var channelNamesToIDs = [];
-  response.channels.forEach(function(channel) {
-    channelNamesToIDs[channel.name] = channel.id;
-  });
-
-  config.get('bosh').authorizedChannelIDs = [];
-  (config.get('slack').authorized_channels || []).forEach(function(name) {
-    if (channelNamesToIDs[name]) {
-      config.get('bosh').authorizedChannelIDs.push(channelNamesToIDs[name]);
-    } else {
-      console.error(new Error(`Couldn't find a Slack channel with name '${name}'`));
-      process.exit(1);
-    }
-  });
+  err = auth.addHandler(controller, response);
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
 
   var notificationChannel = config.get('slack').notification_channel || 'general'
   var bot = new BoshBot(config.get('bosh'));
