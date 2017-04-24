@@ -1,0 +1,5 @@
+env:
+  node: true
+  mocha: true
+rules:
+  no-unused-expressions: off # required for chai matchers

@@ -1,18 +1,17 @@
-var expect = require('chai').expect;
-var td = require('testdouble');
+var expect = require('chai').expect
+var td = require('testdouble')
 
-var TestBot = require('../../src/test_bot');
-var BoshRunner = require('../../src/bosh_runner');
-var Assets = require('../../src/assets');
-var DeployConvo = require('../../src/deploy/convo');
+var TestBot = require('../../src/test_bot')
+var BoshRunner = require('../../src/bosh_runner')
+var Assets = require('../../src/assets')
+var DeployConvo = require('../../src/deploy/convo')
 
-describe('DeployConvo', function() {
-
-  var testController;
-  var alice;
-  var convo;
-  var fakeAssets;
-  var fakeRunner;
+describe('DeployConvo', function () {
+  var testController
+  var alice
+  var convo
+  var fakeAssets
+  var fakeRunner
 
   var diffPrompt = `
   stemcells:
@@ -22,53 +21,53 @@ describe('DeployConvo', function() {
 - - alias: trusty
 -   os: ubuntu-trusty
 -   version: '3263.7'
-`;
+`
 
   var bosh_vars = {
     fake_key: 'fake_value'
-  };
+  }
   var bosh_var_files = {
     fake_var_file: 'fake_var_path'
-  };
+  }
   var bosh_vars_files = {
     fake_vars_file: 'fake_vars_path'
-  };
+  }
   var bosh_ops_files = {
     fake_ops_file: 'fake_ops_path'
-  };
+  }
   var bosh_vars_store = {
     type: 's3',
     bucket: 'fake-bucket',
     key: 'fake-key',
     accessKey: 'fake-access-key',
-    secretKey: 'fake-secret-key',
-  };
+    secretKey: 'fake-secret-key'
+  }
 
-  beforeEach(function() {
-    testController = TestBot();
-    testController.spawn();
+  beforeEach(function () {
+    testController = TestBot()
+    testController.spawn()
 
-    testController.addEventTrigger('direct_mention', function(message) {
+    testController.addEventTrigger('direct_mention', function (message) {
       if (message.text.includes('@bot')) {
         message.text = message.text
           .replace('@bot', '')
           .replace(/^\s+/, '')
-          .replace(/^\:\s+/, '')
-          .replace(/^\s+/, '');
-        return message;
+          .replace(/^:\s+/, '')
+          .replace(/^\s+/, '')
+        return message
       }
-      return null;
-    });
-    testController.addEventTrigger('ambient', function(message) {
-      return message;
-    });
+      return null
+    })
+    testController.addEventTrigger('ambient', function (message) {
+      return message
+    })
 
-    fakeRunner = td.object(BoshRunner());
-    fakeAssets = td.object(Assets());
+    fakeRunner = td.object(BoshRunner())
+    fakeAssets = td.object(Assets())
 
     alice = testController.createUser({
       user: 'alice'
-    });
+    })
 
     convo = DeployConvo({
       runner: fakeRunner,
@@ -81,7 +80,7 @@ describe('DeployConvo', function() {
         var_files: bosh_var_files,
         vars_files: bosh_vars_files,
         ops_files: bosh_ops_files,
-        vars_store: bosh_vars_store,
+        vars_store: bosh_vars_store
       }],
       assets: [
         {
@@ -94,20 +93,20 @@ describe('DeployConvo', function() {
           type: 'git',
           uri: 'https://fake-unused.git'
         }
-      ],
-    });
+      ]
+    })
 
-    convo.addListeners(testController);
+    convo.addListeners(testController)
 
     td.when(fakeAssets.fetchAll(td.matchers.anything()))
-      .thenCallback(null);
-  });
+      .thenCallback(null)
+  })
 
-  afterEach(function() {
-    td.reset();
-  });
+  afterEach(function () {
+    td.reset()
+  })
 
-  it('starts the deployment', function(done) {
+  it('starts the deployment', function (done) {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
@@ -115,46 +114,46 @@ describe('DeployConvo', function() {
       var_files: bosh_var_files,
       vars_files: bosh_vars_files,
       ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store,
-    };
+      vars_store: bosh_vars_store
+    }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '');
+      .thenCallback(null, diffPrompt, '')
 
-    alice.say('@bot deploy concourse');
+    alice.say('@bot deploy concourse')
 
-    var assetResponse = testController.response();
-    expect(assetResponse, 'no response found').to.not.be.null;
+    var assetResponse = testController.response()
+    expect(assetResponse, 'no response found').to.not.be.null
 
-    var diffResponse = testController.response();
-    expect(diffResponse, 'no response found').to.not.be.null;
-    expect(diffResponse).to.contain('@alice');
-    expect(diffResponse).to.contain('stemcells');
-    expect(diffResponse).to.contain('takeoff');
+    var diffResponse = testController.response()
+    expect(diffResponse, 'no response found').to.not.be.null
+    expect(diffResponse).to.contain('@alice')
+    expect(diffResponse).to.contain('stemcells')
+    expect(diffResponse).to.contain('takeoff')
 
     td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
-      .thenDo(function(_, startCb, endCb) {
-        var cancelCb = td.function('.cancel');
-        startCb('777', cancelCb);
+      .thenDo(function (_, startCb, endCb) {
+        var cancelCb = td.function('.cancel')
+        startCb('777', cancelCb)
 
-        var deployResponse = testController.response();
-        expect(deployResponse, 'no response found').to.not.be.null;
-        expect(deployResponse).to.contain('@alice');
-        expect(deployResponse).to.contain('bosh task 777');
+        var deployResponse = testController.response()
+        expect(deployResponse, 'no response found').to.not.be.null
+        expect(deployResponse).to.contain('@alice')
+        expect(deployResponse).to.contain('bosh task 777')
 
-        endCb(null);
-        var deployEndResponse = testController.response();
-        expect(deployEndResponse, 'no response found').to.not.be.null;
-        expect(deployEndResponse).to.contain('@alice');
-        expect(deployEndResponse).to.contain('successful');
+        endCb(null)
+        var deployEndResponse = testController.response()
+        expect(deployEndResponse, 'no response found').to.not.be.null
+        expect(deployEndResponse).to.contain('@alice')
+        expect(deployEndResponse).to.contain('successful')
 
-        td.verify(cancelCb(), {times: 0});
+        td.verify(cancelCb(), {times: 0})
 
-        done();
-      });
-    alice.say('@bot takeoff!');
-  });
+        done()
+      })
+    alice.say('@bot takeoff!')
+  })
 
-  it('cancels the deployment if user enters unsupported response', function() {
+  it('cancels the deployment if user enters unsupported response', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
@@ -162,28 +161,28 @@ describe('DeployConvo', function() {
       var_files: bosh_var_files,
       vars_files: bosh_vars_files,
       ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store,
-    };
+      vars_store: bosh_vars_store
+    }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '');
+      .thenCallback(null, diffPrompt, '')
 
-    alice.say('@bot deploy concourse');
+    alice.say('@bot deploy concourse')
 
-    var assetResponse = testController.response();
-    expect(assetResponse, 'no response found').to.not.be.null;
-    var diffResponse = testController.response();
-    expect(diffResponse, 'no response found').to.not.be.null;
+    var assetResponse = testController.response()
+    expect(assetResponse, 'no response found').to.not.be.null
+    var diffResponse = testController.response()
+    expect(diffResponse, 'no response found').to.not.be.null
 
-    alice.say('@bot foo');
+    alice.say('@bot foo')
 
-    expect(testController.response()).to.eql("<@alice> I guess you don\'t want to *'takeoff'* after all...");
+    expect(testController.response()).to.eql("<@alice> I guess you don't want to *'takeoff'* after all...")
 
-    alice.say('@bot takeoff');
+    alice.say('@bot takeoff')
 
-    expect(testController.response()).to.eql("<@alice> Let me know our destination with *'deploy DESTINATION'*.");
-  });
+    expect(testController.response()).to.eql("<@alice> Let me know our destination with *'deploy DESTINATION'*.")
+  })
 
-  it('cancels the deployment if user enters unknown deployment name', function() {
+  it('cancels the deployment if user enters unknown deployment name', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
@@ -191,21 +190,21 @@ describe('DeployConvo', function() {
       var_files: bosh_var_files,
       vars_files: bosh_vars_files,
       ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store,
-    };
+      vars_store: bosh_vars_store
+    }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '');
+      .thenCallback(null, diffPrompt, '')
 
-    alice.say('@bot deploy foo');
+    alice.say('@bot deploy foo')
 
-    var diffResponse = testController.response();
-    expect(diffResponse, 'no response found').to.not.be.null;
-    expect(diffResponse).to.contain('alice');
-    expect(diffResponse).to.contain('foo');
-    expect(diffResponse).to.contain('concourse');
-  });
+    var diffResponse = testController.response()
+    expect(diffResponse, 'no response found').to.not.be.null
+    expect(diffResponse).to.contain('alice')
+    expect(diffResponse).to.contain('foo')
+    expect(diffResponse).to.contain('concourse')
+  })
 
-  it('allows the user to cancel the deployment', function(done) {
+  it('allows the user to cancel the deployment', function (done) {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
@@ -213,48 +212,48 @@ describe('DeployConvo', function() {
       var_files: bosh_var_files,
       vars_files: bosh_vars_files,
       ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store,
-    };
+      vars_store: bosh_vars_store
+    }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '');
+      .thenCallback(null, diffPrompt, '')
 
-    alice.say('@bot deploy concourse');
+    alice.say('@bot deploy concourse')
 
-    var assetResponse = testController.response();
-    expect(assetResponse, 'no response found').to.not.be.null;
-    var diffResponse = testController.response();
-    expect(diffResponse, 'no response found').to.not.be.null;
+    var assetResponse = testController.response()
+    expect(assetResponse, 'no response found').to.not.be.null
+    var diffResponse = testController.response()
+    expect(diffResponse, 'no response found').to.not.be.null
 
     td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
-      .thenDo(function(_, startCb, endCb) {
-        var cancelCb = td.function('.cancel');
-        startCb('777', cancelCb);
-        var deployResponse = testController.response();
-        expect(deployResponse, 'no response found').to.not.be.null;
-        expect(deployResponse).to.contain('@alice');
-        expect(deployResponse).to.contain('mayday');
+      .thenDo(function (_, startCb, endCb) {
+        var cancelCb = td.function('.cancel')
+        startCb('777', cancelCb)
+        var deployResponse = testController.response()
+        expect(deployResponse, 'no response found').to.not.be.null
+        expect(deployResponse).to.contain('@alice')
+        expect(deployResponse).to.contain('mayday')
 
-        alice.say('@bot mayday!');
-        var cancelResponse = testController.response();
-        expect(cancelResponse, 'no response found').to.not.be.null;
-        expect(cancelResponse).to.contain('@alice');
-        expect(cancelResponse).to.contain('Hold on');
+        alice.say('@bot mayday!')
+        var cancelResponse = testController.response()
+        expect(cancelResponse, 'no response found').to.not.be.null
+        expect(cancelResponse).to.contain('@alice')
+        expect(cancelResponse).to.contain('Hold on')
 
-        endCb(new Error('Deploy failed with exit code 1'));
-        var deployEndResponse = testController.response();
-        expect(deployEndResponse, 'no response found').to.not.be.null;
-        expect(deployEndResponse).to.contain('@alice');
-        expect(deployEndResponse).to.contain('landing');
-        expect(deployEndResponse).to.contain('bosh task 777');
+        endCb(new Error('Deploy failed with exit code 1'))
+        var deployEndResponse = testController.response()
+        expect(deployEndResponse, 'no response found').to.not.be.null
+        expect(deployEndResponse).to.contain('@alice')
+        expect(deployEndResponse).to.contain('landing')
+        expect(deployEndResponse).to.contain('bosh task 777')
 
-        td.verify(cancelCb(), {times: 1});
+        td.verify(cancelCb(), {times: 1})
 
-        done();
-      });
-    alice.say('@bot takeoff!');
-  });
+        done()
+      })
+    alice.say('@bot takeoff!')
+  })
 
-  it('prints all output if deploy fails before task starts', function(done) {
+  it('prints all output if deploy fails before task starts', function (done) {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
@@ -262,18 +261,18 @@ describe('DeployConvo', function() {
       var_files: bosh_var_files,
       vars_files: bosh_vars_files,
       ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store,
-    };
+      vars_store: bosh_vars_store
+    }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '');
+      .thenCallback(null, diffPrompt, '')
 
-    alice.say('@bot deploy concourse');
+    alice.say('@bot deploy concourse')
 
-    var diffResponse = testController.response();
-    expect(diffResponse, 'no response found').to.not.be.null;
+    var diffResponse = testController.response()
+    expect(diffResponse, 'no response found').to.not.be.null
 
     td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
-      .thenDo(function(_, startCb, endCb) {
+      .thenDo(function (_, startCb, endCb) {
         var errMessage = `
 Using environment 'bosh.lylefranklin.com' as user 'admin'
 
@@ -281,20 +280,20 @@ Using deployment 'fake-name'
 
 Expected manifest to specify deployment name 'fake-name' but was 'concourse'
 
-Exit code 1`;
-        endCb(new Error(errMessage), false);
+Exit code 1`
+        endCb(new Error(errMessage), false)
 
-        var deployEndResponse = testController.responses().pop();
-        expect(deployEndResponse, 'no response found').to.not.be.null;
-        expect(deployEndResponse).to.contain('@alice');
-        expect(deployEndResponse).to.contain(errMessage);
+        var deployEndResponse = testController.responses().pop()
+        expect(deployEndResponse, 'no response found').to.not.be.null
+        expect(deployEndResponse).to.contain('@alice')
+        expect(deployEndResponse).to.contain(errMessage)
 
-        done();
-      });
-    alice.say('@bot takeoff!');
-  });
+        done()
+      })
+    alice.say('@bot takeoff!')
+  })
 
-  it('does not prints the deploy error if redact is true', function(done) {
+  it('does not prints the deploy error if redact is true', function (done) {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
@@ -302,18 +301,18 @@ Exit code 1`;
       var_files: bosh_var_files,
       vars_files: bosh_vars_files,
       ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store,
-    };
+      vars_store: bosh_vars_store
+    }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '');
+      .thenCallback(null, diffPrompt, '')
 
-    alice.say('@bot deploy concourse');
+    alice.say('@bot deploy concourse')
 
-    var diffResponse = testController.response();
-    expect(diffResponse, 'no response found').to.not.be.null;
+    var diffResponse = testController.response()
+    expect(diffResponse, 'no response found').to.not.be.null
 
     td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
-      .thenDo(function(_, startCb, endCb) {
+      .thenDo(function (_, startCb, endCb) {
         var errMessage = `
 Using environment 'bosh.lylefranklin.com' as user 'admin'
 
@@ -321,49 +320,49 @@ Using deployment 'fake-name'
 
 Expected manifest to specify deployment name 'fake-name' but was 'concourse'
 
-Exit code 1`;
-        endCb(new Error(errMessage), true);
+Exit code 1`
+        endCb(new Error(errMessage), true)
 
-        var deployEndResponse = testController.responses().pop();
-        expect(deployEndResponse, 'no response found').to.not.be.null;
-        expect(deployEndResponse).to.contain('@alice');
-        expect(deployEndResponse).to.not.contain(errMessage);
+        var deployEndResponse = testController.responses().pop()
+        expect(deployEndResponse, 'no response found').to.not.be.null
+        expect(deployEndResponse).to.contain('@alice')
+        expect(deployEndResponse).to.not.contain(errMessage)
 
-        done();
-      });
-    alice.say('@bot takeoff!');
-  });
+        done()
+      })
+    alice.say('@bot takeoff!')
+  })
 
-  it('pulls a public git repo on `deploy`', function() {
+  it('pulls a public git repo on `deploy`', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
       vars: bosh_vars,
-      var_files: bosh_var_files,
-    };
+      var_files: bosh_var_files
+    }
     // TODO: figure out how to verify these invocations
     td.when(fakeAssets.fetchAll({ concourse: convo.assets.concourse }))
-      .thenCallback(null);
+      .thenCallback(null)
     td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '');
+      .thenCallback(null, diffPrompt, '')
 
-    alice.say('@bot deploy concourse');
+    alice.say('@bot deploy concourse')
 
-    var responses = testController.responses();
-    expect(responses[0], 'no response found').to.not.be.null;
-    expect(responses[0]).to.contain('assets');
-  });
+    var responses = testController.responses()
+    expect(responses[0], 'no response found').to.not.be.null
+    expect(responses[0]).to.contain('assets')
+  })
 
-  it('says an error if fetching asset fails prior to deploy', function() {
-    var expectedAssets = convo.assets.filter(function(a) {
-      return a.name == 'concourse';
-    });
+  it('says an error if fetching asset fails prior to deploy', function () {
+    var expectedAssets = convo.assets.filter(function (a) {
+      return a.name === 'concourse'
+    })
     td.when(fakeAssets.fetchAll(expectedAssets))
-      .thenCallback(new Error('my-fake-error'));
+      .thenCallback(new Error('my-fake-error'))
 
-    alice.say('@bot deploy concourse');
+    alice.say('@bot deploy concourse')
 
-    var resp = testController.responses().pop();
-    expect(resp).to.contain('my-fake-error');
-  });
-});
+    var resp = testController.responses().pop()
+    expect(resp).to.contain('my-fake-error')
+  })
+})

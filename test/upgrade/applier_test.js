@@ -1,61 +1,60 @@
-var expect = require('chai').expect;
-var td = require('testdouble');
+var expect = require('chai').expect
+var td = require('testdouble')
 
-var BoshRunner = require('../../src/bosh_runner');
-var UpgradeApplier = require('../../src/upgrade/applier');
+var BoshRunner = require('../../src/bosh_runner')
+var UpgradeApplier = require('../../src/upgrade/applier')
 
-describe('UpgradeApplier', function() {
+describe('UpgradeApplier', function () {
+  var fakeRunner
+  var applier
 
-  var fakeRunner;
-  var applier;
-
-  beforeEach(function() {
-    fakeRunner = td.object(BoshRunner());
+  beforeEach(function () {
+    fakeRunner = td.object(BoshRunner())
 
     applier = UpgradeApplier({
-      boshRunner: fakeRunner,
-    });
-  });
+      boshRunner: fakeRunner
+    })
+  })
 
-  describe('#upgradeStemcells', function() {
-    it('uploads the given stemcells to the Director', function(done) {
+  describe('#upgradeStemcells', function () {
+    it('uploads the given stemcells to the Director', function (done) {
       var stemcells = [{
-        url: 'fake-url',
+        url: 'fake-url'
       }, {
-        url: 'another-fake-url',
-      }];
+        url: 'another-fake-url'
+      }]
 
       td.when(fakeRunner.uploadStemcells(['fake-url', 'another-fake-url']))
-        .thenCallback(null);
+        .thenCallback(null)
 
-      applier.upgradeStemcells(stemcells, function(err, uploadedStemcells) {
-        expect(err).to.be.null;
-        expect(uploadedStemcells).to.eql(stemcells);
-        td.verify(fakeRunner.uploadStemcells(['fake-url', 'another-fake-url'], td.matchers.isA(Function)));
+      applier.upgradeStemcells(stemcells, function (err, uploadedStemcells) {
+        expect(err).to.be.null
+        expect(uploadedStemcells).to.eql(stemcells)
+        td.verify(fakeRunner.uploadStemcells(['fake-url', 'another-fake-url'], td.matchers.isA(Function)))
 
-        done();
-      });
-    });
-  });
+        done()
+      })
+    })
+  })
 
-  describe('#upgradeReleases', function() {
-    it('uploads the given releases to the Director', function(done) {
+  describe('#upgradeReleases', function () {
+    it('uploads the given releases to the Director', function (done) {
       var releases = [{
-        url: 'fake-url',
+        url: 'fake-url'
       }, {
-        url: 'another-fake-url',
-      }];
+        url: 'another-fake-url'
+      }]
 
       td.when(fakeRunner.uploadReleases(['fake-url', 'another-fake-url']))
-        .thenCallback(null);
+        .thenCallback(null)
 
-      applier.upgradeReleases(releases, function(err, uploadedReleases) {
-        expect(err).to.be.null;
-        expect(uploadedReleases).to.eql(releases);
-        td.verify(fakeRunner.uploadReleases(['fake-url', 'another-fake-url'], td.matchers.isA(Function)));
+      applier.upgradeReleases(releases, function (err, uploadedReleases) {
+        expect(err).to.be.null
+        expect(uploadedReleases).to.eql(releases)
+        td.verify(fakeRunner.uploadReleases(['fake-url', 'another-fake-url'], td.matchers.isA(Function)))
 
-        done();
-      });
-    });
-  });
-});
+        done()
+      })
+    })
+  })
+})

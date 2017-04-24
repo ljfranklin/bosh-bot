@@ -1,78 +1,73 @@
-var fs = require('fs');
-var pki = require('node-forge').pki;
-var ssh = require('node-forge').ssh;
-var async = require('async');
-var crypto = require('crypto');
-var path = require('path');
-var Git = require('simple-git');
+var fs = require('fs')
+var async = require('async')
+var crypto = require('crypto')
+var path = require('path')
+var Git = require('simple-git')
 
-var defaultUserName = 'bosh-bot';
+function GitClient () {
+  var client = {}
 
-function GitClient() {
+  client.fetch = function (gitConfig, targetDir, cb) {
+    var uri = gitConfig.uri
+    var branch = gitConfig.branch || 'master'
+    var deployKey = gitConfig.deploy_key
 
-  var client = {};
+    fs.access(targetDir, fs.constants.W_OK, function (err) {
+      var shouldUpdateAsset = (err == null)
 
-  client.fetch = function(gitConfig, targetDir, cb) {
-    var uri = gitConfig.uri;
-    var branch = gitConfig.branch || 'master';
-    var deployKey = gitConfig.deploy_key;
+      var pathParts = path.parse(targetDir)
 
-    fs.access(targetDir, fs.constants.W_OK, function(err) {
-      var shouldUpdateAsset = (err == null);
+      var client = Git(pathParts.dir)
 
-      var pathParts = path.parse(targetDir);
-
-      var client = Git(pathParts.dir);
-
-      var keyCb = function(kcb) { kcb(); };
-      var cleanupCb = function(ccb) { ccb(); };
+      var keyCb = function (kcb) { kcb() }
+      var cleanupCb = function (ccb) { ccb() }
 
       if (deployKey) {
-        var uuid = crypto.randomBytes(16).toString('hex');
+        var uuid = crypto.randomBytes(16).toString('hex')
         // TODO: move to configurable temp dir
-        var privateKeyPath = `/tmp/deploy-key-${uuid}.pem`;
-        var writeOpts = { mode: 0o600 };
+        var privateKeyPath = `/tmp/deploy-key-${uuid}.pem`
+        var writeOpts = { mode: 0o600 }
 
-        cleanupCb = function(ccb) {
-          fs.unlink(privateKeyPath, ccb);
-        };
-        keyCb = function(kcb) {
-          fs.writeFile(privateKeyPath, deployKey, writeOpts, function(err) {
+        cleanupCb = function (ccb) {
+          fs.unlink(privateKeyPath, ccb)
+        }
+        keyCb = function (kcb) {
+          fs.writeFile(privateKeyPath, deployKey, writeOpts, function (err) {
             if (err) {
-              kcb(err);
-              return;
+              kcb(err)
+              return
             }
             process.env.GIT_SSH_COMMAND = `ssh -i ${privateKeyPath} -F /dev/null -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
 
-            kcb();
-	  });
-        };
+            kcb()
+          })
+        }
       }
 
       async.series([
         keyCb,
-        function(nestedCb) {
+        function (nestedCb) {
           if (shouldUpdateAsset) {
             client.cwd(targetDir)
-	      .checkout(branch, function(err) {
+              .checkout(branch, function (err) {
                 if (err) {
-	          nestedCb(err);
+                  nestedCb(err)
                 }
-	      }).pull(function(err) {
-                nestedCb(err);
-              });
+              }).pull(function (err) {
+                nestedCb(err)
+              })
           } else {
-            client.clone(uri, pathParts.base, ['-b', branch], function(err) {
-	      nestedCb(err);
-            });
+            client.clone(uri, pathParts.base, ['-b', branch], function (err) {
+              nestedCb(err)
+            })
           }
         },
-        cleanupCb,
-      ], cb);
-    });
-  };
+        cleanupCb
+      ], cb)
+    })
+  }
 
-  return client;
+  return client
 }
 
-module.exports = GitClient;
+module.exports = GitClient

@@ -1,85 +1,83 @@
-var fs = require('fs');
-var AWS = require('aws-sdk');
+var fs = require('fs')
+var AWS = require('aws-sdk')
 
-function NotFoundError(message) {
-  Error.captureStackTrace(this, this.constructor);
-  this.name = this.constructor.name;
-  this.message = message;
+function NotFoundError (message) {
+  Error.captureStackTrace(this, this.constructor)
+  this.name = this.constructor.name
+  this.message = message
 }
 
-function createClient(opts) {
-  var client = {};
+function createClient (opts) {
+  var client = {}
 
   var awsOpts = {
-    accessKeyId:     opts.accessKey,
-    secretAccessKey: opts.secretKey,
-  };
+    accessKeyId: opts.accessKey,
+    secretAccessKey: opts.secretKey
+  }
   if (opts.region) {
-    awsOpts.region = opts.region;
+    awsOpts.region = opts.region
   }
   if (opts.endpoint) {
-    awsOpts.endpoint = opts.endpoint;
+    awsOpts.endpoint = opts.endpoint
   }
 
-  var s3 = new AWS.S3(awsOpts);
+  var s3 = new AWS.S3(awsOpts)
 
-  client.upload = function(params, cb) {
+  client.upload = function (params, cb) {
     if (!opts.endpoint && !opts.region) {
-      cb(new Error('Must specify either S3 region or S3 endpoint.'));
-      return;
+      cb(new Error('Must specify either S3 region or S3 endpoint.'))
+      return
     }
 
     var awsParams = {
       Bucket: params.bucket,
       Key: params.key,
-      Body: fs.createReadStream(params.localPath),
-    };
-    s3.putObject(awsParams, function(err, _) {
+      Body: fs.createReadStream(params.localPath)
+    }
+    s3.putObject(awsParams, function (err, _) {
       if (err) {
-        cb(new Error(err.message));
-        return;
+        cb(new Error(err.message))
+        return
       }
-      cb(null);
-    });
-  };
+      cb(null)
+    })
+  }
 
-  client.download = function(params, cb) {
+  client.download = function (params, cb) {
     if (!opts.endpoint && !opts.region) {
-      cb(new Error('Must specify either S3 region or S3 endpoint.'));
-      return;
+      cb(new Error('Must specify either S3 region or S3 endpoint.'))
+      return
     }
 
     var awsParams = {
       Bucket: params.bucket,
-      Key: params.key,
-    };
-    s3.getObject(awsParams, function(err, data) {
+      Key: params.key
+    }
+    s3.getObject(awsParams, function (err, data) {
       if (err) {
-        if (err.statusCode == 404) {
-          cb(new NotFoundError(`The file ${params.key} does not exist in bucket ${params.bucket}.`));
-          return;
+        if (err.statusCode === 404) {
+          cb(new NotFoundError(`The file ${params.key} does not exist in bucket ${params.bucket}.`))
+          return
         } else {
-          cb(new Error(err.message));
-          return;
+          cb(new Error(err.message))
+          return
         }
       }
 
-      fs.writeFile(params.localPath, data.Body, { mode: 0o600 }, function(err) {
+      fs.writeFile(params.localPath, data.Body, { mode: 0o600 }, function (err) {
         if (err) {
-          cb(err);
-          return;
+          cb(err)
         } else {
-          cb(null);
-          return;
+          cb(null)
         }
-      });
-    });
-  };
+      })
+    })
+  }
 
-  return client;
+  return client
 }
 
 module.exports = {
   createClient: createClient,
-  NotFoundError: NotFoundError,
-};
+  NotFoundError: NotFoundError
+}

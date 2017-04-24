@@ -5,5 +5,6 @@ set -eu
 project_dir="$( cd "$( dirname "$0" )/.." && pwd )"
 
 pushd "${project_dir}" > /dev/null
+  ./node_modules/.bin/eslint .
   mocha test/
 popd > /dev/null
