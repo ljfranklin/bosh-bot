@@ -182,34 +182,6 @@ describe('BoshBot', function() {
       alice.say('@bot foo');
       expect(testController.response()).to.eql('<@alice> Sorry, didn\'t catch that...');
     });
-
-    it('tells an unknown user that they do not have permission', function() {
-      spawnBot();
-
-      var becky = testController.createUser({
-        user: 'becky'
-      });
-
-      becky.say('@bot ping');
-      expect(testController.response()).to.include('ticket');
-    });
-
-    it('does not respond if not in an authorized channel', function() {
-      boshConfig.authorizedChannelIDs = ['authorized-channel'];
-      boshConfig.authorizedUserIDs = [
-        'becky',
-      ];
-
-      spawnBot();
-
-      var becky = testController.createUser({
-        user: 'becky',
-        channel: 'non-authorized-channel'
-      });
-
-      becky.say('@bot ping');
-      expect(testController.response()).to.be.null;
-    });
   });
 
   describe('env', function(){
