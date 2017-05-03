@@ -98,6 +98,7 @@ jobs:
       - put: release
         params:
           file: "created-release/*.tgz"
+          acl: "public-read"
       - put: version
         params: {file: version/version}
     on_failure: *failure-alert
@@ -123,6 +124,7 @@ jobs:
           - put: release
             params:
               file: "finalized-release/*.tgz"
+              acl: "public-read"
           - put: version
             params: {file: version/version}
           - task: bump-release-in-manifest
