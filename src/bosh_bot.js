@@ -36,14 +36,14 @@ function BoshBot (config) {
     releases: config.releases
   })
 
-  var upgrader = UpgradeApplier({
+  var applier = UpgradeApplier({
     boshRunner: runner
   })
 
   boshbot.setup = function (controller, defaultChannel, setupCb) {
     var upgradeConvo = UpgradeConvo({
       checker: checker,
-      upgrader: upgrader,
+      applier: applier,
       defaultChannel: defaultChannel
     })
     upgradeConvo.addListeners(controller)

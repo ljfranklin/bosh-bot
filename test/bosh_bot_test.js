@@ -137,7 +137,7 @@ describe('BoshBot', function () {
       './upgrade/convo': function (config) {
         expect(config).to.eql({
           checker: fakeUpgradeChecker,
-          upgrader: fakeUpgradeApplier,
+          applier: fakeUpgradeApplier,
           defaultChannel: 'general'
         })
         return fakeUpgradeConvo
