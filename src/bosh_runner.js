@@ -186,15 +186,13 @@ function BoshRunner (config = {}) {
   }
 
   runner.showDiff = function (opts, cb) {
-    var {
-      name,
-      manifest_path,
-      vars,
-      var_files,
-      vars_files,
-      ops_files,
-      vars_store
-    } = opts
+    var name = opts['name']
+    var manifestPath = opts['manifest_path']
+    var vars = opts['vars']
+    var varFiles = opts['var_files']
+    var varsFiles = opts['vars_files']
+    var opsFiles = opts['ops_files']
+    var varsStore = opts['vars_store']
 
     var stdin = new Readable()
 
@@ -206,28 +204,28 @@ function BoshRunner (config = {}) {
         boshCmd += ` -v '${key}=${JSON.stringify(vars[key])}'`
       })
     }
-    if (var_files) {
-      Object.keys(var_files).forEach(function (key) {
-        boshCmd += ` --var-file '${key}=${var_files[key]}'`
+    if (varFiles) {
+      Object.keys(varFiles).forEach(function (key) {
+        boshCmd += ` --var-file '${key}=${varFiles[key]}'`
       })
     }
-    if (vars_files) {
-      Object.keys(vars_files).forEach(function (key) {
-        boshCmd += ` --vars-file '${key}=${vars_files[key]}'`
+    if (varsFiles) {
+      Object.keys(varsFiles).forEach(function (key) {
+        boshCmd += ` --vars-file '${key}=${varsFiles[key]}'`
       })
     }
-    if (ops_files) {
-      Object.keys(ops_files).forEach(function (key) {
-        boshCmd += ` --ops-file '${key}=${ops_files[key]}'`
+    if (opsFiles) {
+      Object.keys(opsFiles).forEach(function (key) {
+        boshCmd += ` --ops-file '${key}=${opsFiles[key]}'`
       })
     }
-    if (vars_store) {
+    if (varsStore) {
       // TODO: random tmp dir
       var varsStorePath = `/tmp/vars-store-${name}`
       boshCmd += ` --vars-store ${varsStorePath}`
 
       setupCbs.push(function (cb) {
-        downloadVarsStore(vars_store, varsStorePath, cb)
+        downloadVarsStore(varsStore, varsStorePath, cb)
       })
       cleanupCbs.push(function (cb) {
         fs.unlink(varsStorePath, function (_) {
@@ -235,7 +233,7 @@ function BoshRunner (config = {}) {
         })
       })
     }
-    boshCmd += ` ${manifest_path}`
+    boshCmd += ` ${manifestPath}`
 
     var runCmd = function (nestedCb) {
       var boshProcess = spawn('bash', ['-c', boshCmd], {
@@ -299,15 +297,13 @@ function BoshRunner (config = {}) {
   }
 
   runner.deploy = function (opts, taskStartCb, taskEndedCb) {
-    var {
-      name,
-      manifest_path,
-      vars,
-      var_files,
-      vars_files,
-      ops_files,
-      vars_store
-    } = opts
+    var name = opts['name']
+    var manifestPath = opts['manifest_path']
+    var vars = opts['vars']
+    var varFiles = opts['var_files']
+    var varsFiles = opts['vars_files']
+    var opsFiles = opts['ops_files']
+    var varsStore = opts['vars_store']
 
     var setupCbs = []
     var cleanupCbs = []
@@ -317,38 +313,38 @@ function BoshRunner (config = {}) {
         boshCmd += ` -v '${key}=${JSON.stringify(vars[key])}'`
       })
     }
-    if (var_files) {
-      Object.keys(var_files).forEach(function (key) {
-        boshCmd += ` --var-file '${key}=${var_files[key]}'`
+    if (varFiles) {
+      Object.keys(varFiles).forEach(function (key) {
+        boshCmd += ` --var-file '${key}=${varFiles[key]}'`
       })
     }
-    if (vars_files) {
-      Object.keys(vars_files).forEach(function (key) {
-        boshCmd += ` --vars-file '${key}=${vars_files[key]}'`
+    if (varsFiles) {
+      Object.keys(varsFiles).forEach(function (key) {
+        boshCmd += ` --vars-file '${key}=${varsFiles[key]}'`
       })
     }
-    if (ops_files) {
-      Object.keys(ops_files).forEach(function (key) {
-        boshCmd += ` --ops-file '${key}=${ops_files[key]}'`
+    if (opsFiles) {
+      Object.keys(opsFiles).forEach(function (key) {
+        boshCmd += ` --ops-file '${key}=${opsFiles[key]}'`
       })
     }
-    if (vars_store) {
+    if (varsStore) {
       // TODO: random tmp dir
       var varsStorePath = `/tmp/vars-store-${name}`
       boshCmd += ` --vars-store ${varsStorePath}`
 
       setupCbs.push(function (cb) {
-        downloadVarsStore(vars_store, varsStorePath, cb)
+        downloadVarsStore(varsStore, varsStorePath, cb)
       })
       cleanupCbs.push(function (cb) {
-        uploadVarsStore(vars_store, varsStorePath, function (err) {
+        uploadVarsStore(varsStore, varsStorePath, function (err) {
           fs.unlink(varsStorePath, function (_) {
             cb(err)
           })
         })
       })
     }
-    boshCmd += ` ${manifest_path}`
+    boshCmd += ` ${manifestPath}`
 
     var runCmd = function (nestedCb) {
       var boshProcess = spawn('bash', ['-c', boshCmd], {

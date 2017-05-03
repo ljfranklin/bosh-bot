@@ -23,19 +23,19 @@ describe('DeployConvo', function () {
 -   version: '3263.7'
 `
 
-  var bosh_vars = {
+  var boshVars = {
     fake_key: 'fake_value'
   }
-  var bosh_var_files = {
+  var boshVarFiles = {
     fake_var_file: 'fake_var_path'
   }
-  var bosh_vars_files = {
+  var boshVarsFiles = {
     fake_vars_file: 'fake_vars_path'
   }
-  var bosh_ops_files = {
+  var boshOpsFiles = {
     fake_ops_file: 'fake_ops_path'
   }
-  var bosh_vars_store = {
+  var boshVarsStore = {
     type: 's3',
     bucket: 'fake-bucket',
     key: 'fake-key',
@@ -76,11 +76,11 @@ describe('DeployConvo', function () {
         name: 'concourse',
         manifest_path: 'fake-manifest.yml',
         assets: ['concourse'],
-        vars: bosh_vars,
-        var_files: bosh_var_files,
-        vars_files: bosh_vars_files,
-        ops_files: bosh_ops_files,
-        vars_store: bosh_vars_store
+        vars: boshVars,
+        var_files: boshVarFiles,
+        vars_files: boshVarsFiles,
+        ops_files: boshOpsFiles,
+        vars_store: boshVarsStore
       }],
       assets: [
         {
@@ -110,11 +110,11 @@ describe('DeployConvo', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
-      vars: bosh_vars,
-      var_files: bosh_var_files,
-      vars_files: bosh_vars_files,
-      ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store
+      vars: boshVars,
+      var_files: boshVarFiles,
+      vars_files: boshVarsFiles,
+      ops_files: boshOpsFiles,
+      vars_store: boshVarsStore
     }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
       .thenCallback(null, diffPrompt, '')
@@ -157,11 +157,11 @@ describe('DeployConvo', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
-      vars: bosh_vars,
-      var_files: bosh_var_files,
-      vars_files: bosh_vars_files,
-      ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store
+      vars: boshVars,
+      var_files: boshVarFiles,
+      vars_files: boshVarsFiles,
+      ops_files: boshOpsFiles,
+      vars_store: boshVarsStore
     }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
       .thenCallback(null, diffPrompt, '')
@@ -186,11 +186,11 @@ describe('DeployConvo', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
-      vars: bosh_vars,
-      var_files: bosh_var_files,
-      vars_files: bosh_vars_files,
-      ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store
+      vars: boshVars,
+      var_files: boshVarFiles,
+      vars_files: boshVarsFiles,
+      ops_files: boshOpsFiles,
+      vars_store: boshVarsStore
     }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
       .thenCallback(null, diffPrompt, '')
@@ -208,11 +208,11 @@ describe('DeployConvo', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
-      vars: bosh_vars,
-      var_files: bosh_var_files,
-      vars_files: bosh_vars_files,
-      ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store
+      vars: boshVars,
+      var_files: boshVarFiles,
+      vars_files: boshVarsFiles,
+      ops_files: boshOpsFiles,
+      vars_store: boshVarsStore
     }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
       .thenCallback(null, diffPrompt, '')
@@ -257,11 +257,11 @@ describe('DeployConvo', function () {
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
-      vars: bosh_vars,
-      var_files: bosh_var_files,
-      vars_files: bosh_vars_files,
-      ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store
+      vars: boshVars,
+      var_files: boshVarFiles,
+      vars_files: boshVarsFiles,
+      ops_files: boshOpsFiles,
+      vars_store: boshVarsStore
     }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
       .thenCallback(null, diffPrompt, '')
@@ -297,11 +297,11 @@ Exit code 1`
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
-      vars: bosh_vars,
-      var_files: bosh_var_files,
-      vars_files: bosh_vars_files,
-      ops_files: bosh_ops_files,
-      vars_store: bosh_vars_store
+      vars: boshVars,
+      var_files: boshVarFiles,
+      vars_files: boshVarsFiles,
+      ops_files: boshOpsFiles,
+      vars_store: boshVarsStore
     }
     td.when(fakeRunner.showDiff(expectedDeployOpts))
       .thenCallback(null, diffPrompt, '')
@@ -337,8 +337,8 @@ Exit code 1`
     var expectedDeployOpts = {
       name: 'concourse',
       manifest_path: 'fake-manifest.yml',
-      vars: bosh_vars,
-      var_files: bosh_var_files
+      vars: boshVars,
+      var_files: boshVarFiles
     }
     // TODO: figure out how to verify these invocations
     td.when(fakeAssets.fetchAll({ concourse: convo.assets.concourse }))

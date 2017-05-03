@@ -99,7 +99,7 @@ function UpgradeConvo (config) {
           if (err) {
             controller.say({
               text: `Sorry folks, we're experiencing some mechanical difficulties: ${err}.`,
-              channel: defaultChannel
+              channel: convo.defaultChannel
             })
             return
           }
