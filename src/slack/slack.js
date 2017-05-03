@@ -20,6 +20,11 @@ function Slack (config = {}) {
         return
       }
 
+      // controller does not provide a built-in way to originate messages
+      controller.say = function (opts, cb) {
+        bot.say(opts, cb)
+      }
+
       cb(null, controller, response)
     })
   }

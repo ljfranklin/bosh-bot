@@ -41,9 +41,18 @@ slack.start(function (err, controller, response) {
     process.exit(1)
   }
 
-  var notificationChannel = config.get('slack').notification_channel || 'general'
+  var notificationChannelName = config.get('slack').notification_channel || 'general'
+
+  var notificationChannel = response.channels.find(function (channel) {
+    return (channel.name === notificationChannelName)
+  })
+  if (!notificationChannel) {
+    console.error(`Failed to find channel with name '${notificationChannelName}'`)
+    process.exit(1)
+  }
+
   var bot = new BoshBot(config.get('bosh'))
-  bot.setup(controller, notificationChannel, function (err) {
+  bot.setup(controller, notificationChannel.id, function (err) {
     if (err) {
       console.error(err)
       process.exit(1)
