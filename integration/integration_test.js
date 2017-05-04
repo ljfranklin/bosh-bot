@@ -62,7 +62,8 @@ describe('Integration', function () {
       slack: {
         token: serverToken,
         authorized_usernames: [clientBotName],
-        authorized_channels: [channelName]
+        authorized_channels: [channelName],
+        notification_channel: channelName
       },
       bosh: {
         env: boshEnv,
