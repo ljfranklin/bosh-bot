@@ -5,5 +5,5 @@ set -eu
 project_dir="$( cd "$( dirname "$0" )/.." && pwd )"
 
 pushd "${project_dir}" > /dev/null
-  mocha integration/ --slow 600000
+  mocha integration/ --slow 600000 --recursive
 popd > /dev/null

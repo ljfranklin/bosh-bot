@@ -46,7 +46,8 @@ describe('UpgradeConvo', function () {
     convo = UpgradeConvo({
       checker: fakeUpgradeChecker,
       applier: fakeUpgradeApplier,
-      interval: 30 * 60 * 1000
+      interval: 30 * 60 * 1000,
+      defaultChannel: 'general'
     })
 
     convo.addListeners(testController)

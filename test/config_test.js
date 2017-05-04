@@ -14,7 +14,8 @@ describe('BoshBot', function () {
   var validConfig = {
     slack: {
       token: 'fake-token',
-      authorized_usernames: ['fake-user']
+      authorized_usernames: ['fake-user'],
+      notification_channel: 'general'
     },
     bosh: {
       env: 'fake-env',
@@ -56,6 +57,7 @@ describe('BoshBot', function () {
       var err = config.loadSync()
       expect(err).to.be.an('error')
       expect(err.message).to.include('slack.token')
+      expect(err.message).to.include('slack.notification_channel')
       expect(err.message).to.include('slack.authorized_usernames')
       expect(err.message).to.include('bosh.env')
       expect(err.message).to.include('bosh.user')
@@ -83,6 +85,7 @@ describe('BoshBot', function () {
       expect(config.get('bosh.deployments')).to.eql([])
       expect(config.get('bosh.assets')).to.eql([])
       expect(config.get('bosh.upgrade_interval')).to.eql(60 * 60 * 1000)
+      expect(config.get('bosh.disable_background_upgrades')).to.eql(false)
     })
   })
 

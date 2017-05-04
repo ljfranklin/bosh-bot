@@ -45,7 +45,7 @@ function BoshBot (config) {
     var upgradeConvo = UpgradeConvo({
       checker: checker,
       applier: applier,
-      defaultChannel: defaultChannel,
+      defaultChannel: defaultChannel || null,
       interval: boshbot.upgradeInterval
     })
     upgradeConvo.addListeners(controller)

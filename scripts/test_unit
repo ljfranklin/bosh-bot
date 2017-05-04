@@ -6,5 +6,5 @@ project_dir="$( cd "$( dirname "$0" )/.." && pwd )"
 
 pushd "${project_dir}" > /dev/null
   ./node_modules/.bin/eslint .
-  mocha test/ --slow 10000
+  mocha test/ --slow 10000 --recursive
 popd > /dev/null

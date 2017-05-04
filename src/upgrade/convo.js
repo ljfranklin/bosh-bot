@@ -5,7 +5,8 @@ function UpgradeConvo (config) {
     interval: config.interval,
     checker: config.checker,
     applier: config.applier,
-    defaultChannel: config.defaultChannel || 'general'
+    defaultChannel: config.defaultChannel,
+    disableBackgroundUpgrades: (config.defaultChannel == null)
   }
 
   convo.addListeners = function (controller) {
@@ -66,65 +67,67 @@ function UpgradeConvo (config) {
       })
     })
 
-    setInterval(function () {
-      async.parallel([
-        function (cb) {
-          convo.checker.upgradeableReleases(function (err, releasesToUpdate) {
+    if (!convo.disableBackgroundUpgrades) {
+      setInterval(function () {
+        async.parallel([
+          function (cb) {
+            convo.checker.upgradeableReleases(function (err, releasesToUpdate) {
+              if (err) {
+                cb(err)
+                return
+              }
+              if (releasesToUpdate.length === 0) {
+                cb(null, [])
+                return
+              }
+              convo.applier.upgradeReleases(releasesToUpdate, cb)
+            })
+          },
+          function (cb) {
+            convo.checker.upgradeableStemcells(function (err, stemcellsToUpdate) {
+              if (err) {
+                cb(err)
+                return
+              }
+              if (stemcellsToUpdate.length === 0) {
+                cb(null, [])
+                return
+              }
+              convo.applier.upgradeStemcells(stemcellsToUpdate, cb)
+            })
+          }
+        ],
+          function (err, results) {
             if (err) {
-              cb(err)
+              controller.say({
+                text: `Sorry folks, we're experiencing some mechanical difficulties: ${err}.`,
+                channel: convo.defaultChannel
+              })
               return
             }
-            if (releasesToUpdate.length === 0) {
-              cb(null, [])
+
+            var uploadedItems = results[0].concat(results[1]).map(function (r) { return r.displayName })
+            if (uploadedItems.length === 0) {
+              // say nothing
               return
             }
-            convo.applier.upgradeReleases(releasesToUpdate, cb)
-          })
-        },
-        function (cb) {
-          convo.checker.upgradeableStemcells(function (err, stemcellsToUpdate) {
-            if (err) {
-              cb(err)
-              return
+
+            var releaseMsg
+            if (uploadedItems.length === 1) {
+              releaseMsg = uploadedItems[0]
+            } else if (uploadedItems.length === 2) {
+              releaseMsg = `${uploadedItems[0]} and ${uploadedItems[1]}`
+            } else {
+              releaseMsg = `${uploadedItems.slice(0, -1).join(', ')}, and ${uploadedItems[uploadedItems.length - 1]}`
             }
-            if (stemcellsToUpdate.length === 0) {
-              cb(null, [])
-              return
-            }
-            convo.applier.upgradeStemcells(stemcellsToUpdate, cb)
-          })
-        }
-      ],
-        function (err, results) {
-          if (err) {
+
             controller.say({
-              text: `Sorry folks, we're experiencing some mechanical difficulties: ${err}.`,
+              text: `We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`,
               channel: convo.defaultChannel
             })
-            return
-          }
-
-          var uploadedItems = results[0].concat(results[1]).map(function (r) { return r.displayName })
-          if (uploadedItems.length === 0) {
-            // say nothing
-            return
-          }
-
-          var releaseMsg
-          if (uploadedItems.length === 1) {
-            releaseMsg = uploadedItems[0]
-          } else if (uploadedItems.length === 2) {
-            releaseMsg = `${uploadedItems[0]} and ${uploadedItems[1]}`
-          } else {
-            releaseMsg = `${uploadedItems.slice(0, -1).join(', ')}, and ${uploadedItems[uploadedItems.length - 1]}`
-          }
-
-          controller.say({
-            text: `We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`,
-            channel: convo.defaultChannel
           })
-        })
-    }, convo.interval)
+      }, convo.interval)
+    }
   }
 
   return convo

@@ -41,18 +41,21 @@ slack.start(function (err, controller, response) {
     process.exit(1)
   }
 
-  var notificationChannelName = config.get('slack').notification_channel || 'general'
-
-  var notificationChannel = response.channels.find(function (channel) {
-    return (channel.name === notificationChannelName)
-  })
-  if (!notificationChannel) {
-    console.error(`Failed to find channel with name '${notificationChannelName}'`)
-    process.exit(1)
+  var notificationChannelID = null
+  if (!config.get('bosh').disable_background_upgrades) {
+    var notificationChannelName = config.get('bosh').disable_background_upgrades
+    var notificationChannel = response.channels.find(function (channel) {
+      return (channel.name === notificationChannelName)
+    })
+    if (!notificationChannel) {
+      console.error(`Failed to find channel with name '${notificationChannelName}'`)
+      process.exit(1)
+    }
+    notificationChannelID = notificationChannel.id
   }
 
   var bot = new BoshBot(config.get('bosh'))
-  bot.setup(controller, notificationChannel.id, function (err) {
+  bot.setup(controller, notificationChannelID, function (err) {
     if (err) {
       console.error(err)
       process.exit(1)

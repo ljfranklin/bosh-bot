@@ -18,7 +18,8 @@ function Config (configPath) {
       stemcells: [],
       deployments: [],
       assets: [],
-      upgrade_interval: 60 * 60 * 1000
+      upgrade_interval: 60 * 60 * 1000,
+      disable_background_upgrades: false
     }
   }
 
@@ -58,6 +59,9 @@ function Config (configPath) {
         missingFields.push(requiredField)
       }
     })
+    if (config.get('bosh.disable_background_upgrades') === false && config.get('slack.notification_channel') == null) {
+      missingFields.push('slack.notification_channel')
+    }
 
     if (missingFields.length > 0) {
       return new Error(`Missing required config properties: ${missingFields.join(', ')}`)
