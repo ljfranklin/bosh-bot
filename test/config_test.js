@@ -82,6 +82,7 @@ describe('BoshBot', function () {
       expect(config.get('bosh.stemcells')).to.eql([])
       expect(config.get('bosh.deployments')).to.eql([])
       expect(config.get('bosh.assets')).to.eql([])
+      expect(config.get('bosh.upgrade_interval')).to.eql(60 * 60 * 1000)
     })
   })
 

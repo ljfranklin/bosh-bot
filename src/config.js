@@ -17,7 +17,8 @@ function Config (configPath) {
       releases: [],
       stemcells: [],
       deployments: [],
-      assets: []
+      assets: [],
+      upgrade_interval: 60 * 60 * 1000
     }
   }
 

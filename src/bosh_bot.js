@@ -14,7 +14,8 @@ function BoshBot (config) {
     deployments: config.deployments || [],
     releases: config.releases || [],
     stemcells: config.stemcells || [],
-    assets: config.assets || []
+    assets: config.assets || [],
+    upgradeInterval: config.upgrade_interval
   }
 
   // TODO: random tmp dir?
@@ -44,7 +45,8 @@ function BoshBot (config) {
     var upgradeConvo = UpgradeConvo({
       checker: checker,
       applier: applier,
-      defaultChannel: defaultChannel
+      defaultChannel: defaultChannel,
+      interval: boshbot.upgradeInterval
     })
     upgradeConvo.addListeners(controller)
 

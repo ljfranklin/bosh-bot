@@ -2,7 +2,7 @@ var async = require('async')
 
 function UpgradeConvo (config) {
   var convo = {
-    upgradeInterval: 60 * 60 * 1000,
+    interval: config.interval,
     checker: config.checker,
     applier: config.applier,
     defaultChannel: config.defaultChannel || 'general'
@@ -124,7 +124,7 @@ function UpgradeConvo (config) {
             channel: convo.defaultChannel
           })
         })
-    }, convo.upgradeInterval)
+    }, convo.interval)
   }
 
   return convo

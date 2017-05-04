@@ -45,7 +45,8 @@ describe('UpgradeConvo', function () {
 
     convo = UpgradeConvo({
       checker: fakeUpgradeChecker,
-      applier: fakeUpgradeApplier
+      applier: fakeUpgradeApplier,
+      interval: 30 * 60 * 1000
     })
 
     convo.addListeners(testController)
@@ -57,7 +58,7 @@ describe('UpgradeConvo', function () {
   })
 
   it('uploads new releases to the director on a timer', function () {
-    fakeClock.tick('59:00')
+    fakeClock.tick('29:00')
     expect(testController.response()).to.be.nil
 
     var newReleases = [
@@ -85,7 +86,7 @@ describe('UpgradeConvo', function () {
   })
 
   it('uploads new stemcells to the director on a timer', function () {
-    fakeClock.tick('59:00')
+    fakeClock.tick('29:00')
     expect(testController.response()).to.be.nil
 
     var newStemcells = [

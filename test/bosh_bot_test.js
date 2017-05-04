@@ -57,6 +57,7 @@ describe('BoshBot', function () {
       env: 'https://my-bosh.com',
       user: 'admin',
       password: 'fake-password',
+      upgrade_interval: 30 * 60 * 1000,
       stemcells: [
         {
           boshio_id: 'newer-stemcell'
@@ -138,7 +139,8 @@ describe('BoshBot', function () {
         expect(config).to.eql({
           checker: fakeUpgradeChecker,
           applier: fakeUpgradeApplier,
-          defaultChannel: 'general'
+          defaultChannel: 'general',
+          interval: 30 * 60 * 1000
         })
         return fakeUpgradeConvo
       },
