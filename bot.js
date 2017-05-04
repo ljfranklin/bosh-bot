@@ -43,7 +43,7 @@ slack.start(function (err, controller, response) {
 
   var notificationChannelID = null
   if (!config.get('bosh').disable_background_upgrades) {
-    var notificationChannelName = config.get('bosh').disable_background_upgrades
+    var notificationChannelName = config.get('slack').notification_channel
     var notificationChannel = response.channels.find(function (channel) {
       return (channel.name === notificationChannelName)
     })
