@@ -30,7 +30,7 @@ function UpgradeConvo (config) {
 
         var uploadedItems = releasesToUpload.concat(stemcellsToUpload).map(function (r) { return r.displayName })
         if (uploadedItems.length === 0) {
-          var text = convo.personality.reply({ user: message.user, key: 'upgrade_check_none_available' })
+          text = convo.personality.reply({ user: message.user, key: 'upgrade_check_none_available' })
           bot.reply(message, text)
           return
         }
@@ -44,7 +44,7 @@ function UpgradeConvo (config) {
           releaseMsg = `${uploadedItems.slice(0, -1).join(', ')}, and ${uploadedItems[uploadedItems.length - 1]}`
         }
 
-        var text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_starting', args: [releaseMsg]})
+        text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_starting', args: [releaseMsg] })
         bot.reply(message, text)
 
         async.parallel([
@@ -64,11 +64,11 @@ function UpgradeConvo (config) {
           }
         ], function (err, _) {
           if (err) {
-            var text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_error', args: [err]})
+            var text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_error', args: [err] })
             bot.reply(message, text)
             return
           }
-          var text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_finished' })
+          text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_finished' })
           bot.reply(message, text)
         })
       })

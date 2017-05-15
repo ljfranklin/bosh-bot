@@ -12,7 +12,7 @@ describe('Personality', function () {
     expect(err).to.be.null
   })
 
-  it('returns a simple reply', function() {
+  it('returns a simple reply', function () {
     var opts = {
       user: fakeUser,
       key: 'hello'
@@ -20,7 +20,7 @@ describe('Personality', function () {
     expect(personality.reply(opts)).to.eql('<@fake-user-id> Hello yourself.')
   })
 
-  it('returns a reply with args', function() {
+  it('returns a reply with args', function () {
     var opts = {
       user: fakeUser,
       key: 'upgrade_check_error',
@@ -29,14 +29,14 @@ describe('Personality', function () {
     expect(personality.reply(opts)).to.eql('<@fake-user-id> Sorry, we hit a glitch trying to check for upgrades: fake-error.')
   })
 
-  it('returns a simple saying', function() {
+  it('returns a simple saying', function () {
     var opts = {
       key: 'hello'
     }
     expect(personality.say(opts)).to.eql('Hello yourself.')
   })
 
-  it('returns a saying with args', function() {
+  it('returns a saying with args', function () {
     var opts = {
       key: 'upgrade_check_error',
       args: ['fake-error']

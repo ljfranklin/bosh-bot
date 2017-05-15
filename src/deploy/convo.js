@@ -27,7 +27,7 @@ function DeployConvo (config = {}) {
         return convo.assets.find(function (a) { return a.name === assetName })
       })
       if (assetsToFetch.length > 0) {
-        var text = convo.personality.reply({ user: message.user, key: 'deploy_starting' })
+        text = convo.personality.reply({ user: message.user, key: 'deploy_starting' })
         bot.reply(message, text)
       }
       convo.assetsFetcher.fetchAll(assetsToFetch, function (assetsErr) {
