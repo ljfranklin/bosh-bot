@@ -9,6 +9,7 @@ var UpgradeChecker = require('../src/upgrade/checker')
 var UpgradeApplier = require('../src/upgrade/applier')
 var UpgradeConvo = require('../src/upgrade/convo')
 var DeployConvo = require('../src/deploy/convo')
+var Personality = require('../src/personality')
 
 describe('BoshBot', function () {
   var testController
@@ -106,6 +107,10 @@ describe('BoshBot', function () {
   })
 
   function spawnBot () {
+    var personality = Personality('captain_bucky')
+    var err = personality.loadSync()
+    expect(err).to.be.null
+
     var BoshBot = proxyquire('../src/bosh_bot', {
       './bosh_runner': function (runnerConfig) {
         expect(runnerConfig.env).to.eql('https://my-bosh.com')
@@ -121,12 +126,10 @@ describe('BoshBot', function () {
         return fakeAssets
       },
       './upgrade/checker': function (config) {
-        expect(config).to.eql({
-          boshRunner: fakeRunner,
-          boshioClient: fakeBoshio,
-          stemcells: boshConfig.stemcells,
-          releases: boshConfig.releases
-        })
+        expect(config.boshRunner).to.eql(fakeRunner)
+        expect(config.boshioClient).to.eql(fakeBoshio)
+        expect(config.stemcells).to.eql(boshConfig.stemcells)
+        expect(config.releases).to.eql(boshConfig.releases)
         return fakeUpgradeChecker
       },
       './upgrade/applier': function (config) {
@@ -136,21 +139,19 @@ describe('BoshBot', function () {
         return fakeUpgradeApplier
       },
       './upgrade/convo': function (config) {
-        expect(config).to.eql({
-          checker: fakeUpgradeChecker,
-          applier: fakeUpgradeApplier,
-          defaultChannel: 'general',
-          interval: 30 * 60 * 1000
-        })
+        expect(config.checker).to.eql(fakeUpgradeChecker)
+        expect(config.applier).to.eql(fakeUpgradeApplier)
+        expect(config.notificationChannel).to.eql('general')
+        expect(config.interval).to.eql(30 * 60 * 1000)
+        expect(config.personality).to.eql(personality)
         return fakeUpgradeConvo
       },
       './deploy/convo': function (config) {
-        expect(config).to.eql({
-          deployments: boshConfig.deployments,
-          assetsFetcher: fakeAssets,
-          assets: boshConfig.assets,
-          runner: fakeRunner
-        })
+        expect(config.deployments).to.eql(boshConfig.deployments)
+        expect(config.assets).to.eql(boshConfig.assets)
+        expect(config.assetsFetcher).to.eql(fakeAssets)
+        expect(config.runner).to.eql(fakeRunner)
+        expect(config.personality).to.eql(personality)
         return fakeDeployConvo
       }
     })
@@ -159,7 +160,12 @@ describe('BoshBot', function () {
       .thenCallback(null)
 
     var bot = BoshBot(boshConfig)
-    bot.setup(testController, 'general', function () {})
+    var setupOpts = {
+      controller: testController,
+      notificationChannel: 'general',
+      personality: personality
+    }
+    bot.setup(setupOpts, function () {})
   }
 
   describe('greetings', function () {

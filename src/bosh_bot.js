@@ -41,12 +41,17 @@ function BoshBot (config) {
     boshRunner: runner
   })
 
-  boshbot.setup = function (controller, defaultChannel, setupCb) {
+  boshbot.setup = function (opts, setupCb) {
+    var controller = opts.controller
+    var personality = opts.personality
+    var notificationChannel = opts.notificationChannel
+
     var upgradeConvo = UpgradeConvo({
       checker: checker,
       applier: applier,
-      defaultChannel: defaultChannel || null,
-      interval: boshbot.upgradeInterval
+      notificationChannel: notificationChannel || null,
+      interval: boshbot.upgradeInterval,
+      personality: personality
     })
     upgradeConvo.addListeners(controller)
 
@@ -54,24 +59,29 @@ function BoshBot (config) {
       deployments: boshbot.deployments,
       assetsFetcher: assets,
       assets: boshbot.assets,
-      runner: runner
+      runner: runner,
+      personality: personality
     })
     deployConvo.addListeners(controller)
 
     controller.hears('hello', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      bot.reply(message, `<@${message.user}> Hello yourself.`)
+      var text = personality.reply({ user: message.user, key: 'hello' })
+      bot.reply(message, text)
     })
 
     controller.hears('ping', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      bot.reply(message, `<@${message.user}> pong`)
+      var text = personality.reply({ user: message.user, key: 'ping' })
+      bot.reply(message, text)
     })
 
     controller.hears('env', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      bot.reply(message, `<@${message.user}> Currently targeting *${boshbot.env}*.`)
+      var text = personality.reply({ user: message.user, key: 'env', args: [boshbot.env] })
+      bot.reply(message, text)
     })
 
     controller.hears('.*', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      bot.reply(message, `<@${message.user}> Sorry, didn't catch that...`)
+      var text = personality.reply({ user: message.user, key: 'unknown_message' })
+      bot.reply(message, text)
     })
 
     assets.fetchAll(boshbot.assets, setupCb)

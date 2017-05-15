@@ -1,7 +1,8 @@
 function Auth (config = {}) {
   var auth = {
     authorizedChannels: config.authorizedChannels || [],
-    authorizedUsers: config.authorizedUsers || []
+    authorizedUsers: config.authorizedUsers || [],
+    personality: config.personality
   }
 
   auth.addHandler = function (controller, connectResponse) {
@@ -49,7 +50,8 @@ function Auth (config = {}) {
       if (authorizedUserIDs.includes(message.user)) {
         next()
       } else {
-        bot.reply(message, `<@${message.user}> I'm afraid you don't have a ticket for this flight. Please see one of our authorized staff to get this sorted out.`)
+        var text = auth.personality.reply({ user: message.user, key: 'not_authorized' })
+        bot.reply(message, text)
       }
     })
 

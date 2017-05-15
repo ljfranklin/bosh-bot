@@ -13,6 +13,7 @@ function Config (configPath) {
     'bosh.password'
   ]
   var defaultContents = {
+    personality: 'captain_bucky',
     bosh: {
       releases: [],
       stemcells: [],
@@ -31,7 +32,11 @@ function Config (configPath) {
     }
 
     Object.keys(defaultContents).forEach(function (key) {
-      contents[key] = Object.assign(defaultContents[key], contents[key])
+      if (defaultContents[key].constructor === Object) {
+        contents[key] = Object.assign(defaultContents[key], contents[key])
+      } else if (contents.hasOwnProperty(key) === false) {
+        contents[key] = defaultContents[key]
+      }
     })
 
     return validate()

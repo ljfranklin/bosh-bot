@@ -5,6 +5,7 @@ var TestBot = require('../../src/test_bot')
 var BoshRunner = require('../../src/bosh_runner')
 var Assets = require('../../src/assets')
 var DeployConvo = require('../../src/deploy/convo')
+var Personality = require('../../src/personality')
 
 describe('DeployConvo', function () {
   var testController
@@ -69,7 +70,12 @@ describe('DeployConvo', function () {
       user: 'alice'
     })
 
+    var personality = Personality('captain_bucky')
+    var err = personality.loadSync()
+    expect(err).to.be.null
+
     convo = DeployConvo({
+      personality: personality,
       runner: fakeRunner,
       assetsFetcher: fakeAssets,
       deployments: [{
@@ -281,52 +287,12 @@ Using deployment 'fake-name'
 Expected manifest to specify deployment name 'fake-name' but was 'concourse'
 
 Exit code 1`
-        endCb(new Error(errMessage), false)
+        endCb(new Error(errMessage))
 
         var deployEndResponse = testController.responses().pop()
         expect(deployEndResponse, 'no response found').to.not.be.null
         expect(deployEndResponse).to.contain('@alice')
         expect(deployEndResponse).to.contain(errMessage)
-
-        done()
-      })
-    alice.say('@bot takeoff!')
-  })
-
-  it('does not prints the deploy error if redact is true', function (done) {
-    var expectedDeployOpts = {
-      name: 'concourse',
-      manifest_path: 'fake-manifest.yml',
-      vars: boshVars,
-      var_files: boshVarFiles,
-      vars_files: boshVarsFiles,
-      ops_files: boshOpsFiles,
-      vars_store: boshVarsStore
-    }
-    td.when(fakeRunner.showDiff(expectedDeployOpts))
-      .thenCallback(null, diffPrompt, '')
-
-    alice.say('@bot deploy concourse')
-
-    var diffResponse = testController.response()
-    expect(diffResponse, 'no response found').to.not.be.null
-
-    td.when(fakeRunner.deploy(expectedDeployOpts, td.matchers.isA(Function), td.matchers.isA(Function)))
-      .thenDo(function (_, startCb, endCb) {
-        var errMessage = `
-Using environment 'bosh.lylefranklin.com' as user 'admin'
-
-Using deployment 'fake-name'
-
-Expected manifest to specify deployment name 'fake-name' but was 'concourse'
-
-Exit code 1`
-        endCb(new Error(errMessage), true)
-
-        var deployEndResponse = testController.responses().pop()
-        expect(deployEndResponse, 'no response found').to.not.be.null
-        expect(deployEndResponse).to.contain('@alice')
-        expect(deployEndResponse).to.not.contain(errMessage)
 
         done()
       })

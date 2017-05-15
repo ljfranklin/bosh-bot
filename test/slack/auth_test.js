@@ -2,6 +2,7 @@ var expect = require('chai').expect
 var td = require('testdouble')
 var TestBot = require('../../src/test_bot')
 var Auth = require('../../src/slack/auth')
+var Personality = require('../../src/personality')
 
 describe('Slack Auth', function () {
   var auth
@@ -23,11 +24,16 @@ describe('Slack Auth', function () {
       user: '123'
     })
 
+    var personality = Personality('captain_bucky')
+    var err = personality.loadSync()
+    expect(err).to.be.null
+
     auth = Auth({
       authorizedUsers: [
         'alice'
       ],
-      authorizedChannels: []
+      authorizedChannels: [],
+      personality: personality
     })
   })
 

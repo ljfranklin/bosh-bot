@@ -3,6 +3,7 @@ var BoshBot = require('./src/bosh_bot')
 var Config = require('./src/config')
 var Slack = require('./src/slack/slack')
 var SlackAuth = require('./src/slack/auth')
+var Personality = require('./src/personality')
 
 console.log('Spinning up...')
 
@@ -30,17 +31,6 @@ slack.start(function (err, controller, response) {
     process.exit(1)
   }
 
-  var auth = SlackAuth({
-    authorizedUsers: config.get('slack').authorized_usernames,
-    authorizedChannels: config.get('slack').authorized_channels
-  })
-
-  err = auth.addHandler(controller, response)
-  if (err) {
-    console.error(err)
-    process.exit(1)
-  }
-
   var notificationChannelID = null
   if (!config.get('bosh').disable_background_upgrades) {
     var notificationChannelName = config.get('slack').notification_channel
@@ -54,8 +44,32 @@ slack.start(function (err, controller, response) {
     notificationChannelID = notificationChannel.id
   }
 
+  var personality = Personality(config.get('personality'))
+  err = personality.loadSync()
+  if (err) {
+    console.error(err)
+    process.exit(1)
+  }
+
+  var auth = SlackAuth({
+    authorizedUsers: config.get('slack').authorized_usernames,
+    authorizedChannels: config.get('slack').authorized_channels,
+    personality: personality
+  })
+
+  err = auth.addHandler(controller, response)
+  if (err) {
+    console.error(err)
+    process.exit(1)
+  }
+
   var bot = new BoshBot(config.get('bosh'))
-  bot.setup(controller, notificationChannelID, function (err) {
+  var setupOpts = {
+    controller: controller,
+    personality: personality,
+    notificationChannel: notificationChannelID
+  }
+  bot.setup(setupOpts, function (err) {
     if (err) {
       console.error(err)
       process.exit(1)

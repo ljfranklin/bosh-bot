@@ -6,6 +6,7 @@ var TestBot = require('../../src/test_bot')
 var UpgradeApplier = require('../../src/upgrade/applier')
 var UpgradeChecker = require('../../src/upgrade/checker')
 var UpgradeConvo = require('../../src/upgrade/convo')
+var Personality = require('../../src/personality')
 
 describe('UpgradeConvo', function () {
   var fakeUpgradeChecker
@@ -43,11 +44,16 @@ describe('UpgradeConvo', function () {
     fakeUpgradeChecker = td.object(UpgradeChecker({}))
     fakeUpgradeApplier = td.object(UpgradeApplier({}))
 
+    var personality = Personality('captain_bucky')
+    var err = personality.loadSync()
+    expect(err).to.be.null
+
     convo = UpgradeConvo({
       checker: fakeUpgradeChecker,
       applier: fakeUpgradeApplier,
       interval: 30 * 60 * 1000,
-      defaultChannel: 'general'
+      notificationChannel: 'general',
+      personality: personality
     })
 
     convo.addListeners(testController)

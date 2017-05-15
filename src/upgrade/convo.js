@@ -5,20 +5,23 @@ function UpgradeConvo (config) {
     interval: config.interval,
     checker: config.checker,
     applier: config.applier,
-    defaultChannel: config.defaultChannel,
-    disableBackgroundUpgrades: (config.defaultChannel == null)
+    notificationChannel: config.notificationChannel,
+    disableBackgroundUpgrades: (config.notificationChannel == null),
+    personality: config.personality
   }
 
   convo.addListeners = function (controller) {
     controller.hears('upgrade', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      bot.reply(message, `<@${message.user}> Let's see if any flight upgrades are available...`)
+      var text = convo.personality.reply({ user: message.user, key: 'upgrade_check_starting' })
+      bot.reply(message, text)
       async.parallel([
         convo.checker.upgradeableReleases,
         convo.checker.upgradeableStemcells
       ],
       function (err, results) {
         if (err) {
-          bot.reply(message, `<@${message.user}> Sorry, we hit a glitch trying to check for upgrades: ${err}.`)
+          var text = convo.personality.reply({ user: message.user, key: 'upgrade_check_error', args: [err] })
+          bot.reply(message, text)
           return
         }
 
@@ -27,7 +30,8 @@ function UpgradeConvo (config) {
 
         var uploadedItems = releasesToUpload.concat(stemcellsToUpload).map(function (r) { return r.displayName })
         if (uploadedItems.length === 0) {
-          bot.reply(message, `<@${message.user}> I'm sorry, there don't appear to be any upgrades available.`)
+          var text = convo.personality.reply({ user: message.user, key: 'upgrade_check_none_available' })
+          bot.reply(message, text)
           return
         }
 
@@ -40,7 +44,8 @@ function UpgradeConvo (config) {
           releaseMsg = `${uploadedItems.slice(0, -1).join(', ')}, and ${uploadedItems[uploadedItems.length - 1]}`
         }
 
-        bot.reply(message, `<@${message.user}> You're in luck! We have upgrades available for ${releaseMsg}. Give me a minute to set that up...`)
+        var text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_starting', args: [releaseMsg]})
+        bot.reply(message, text)
 
         async.parallel([
           function (cb) {
@@ -59,10 +64,12 @@ function UpgradeConvo (config) {
           }
         ], function (err, _) {
           if (err) {
-            bot.reply(message, `<@${message.user}> Sorry, we hit a glitch trying to apply your upgrades: ${err}.`)
+            var text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_error', args: [err]})
+            bot.reply(message, text)
             return
           }
-          bot.reply(message, `<@${message.user}> Your tickets have been upgraded! Board the plane by telling me 'deploy DESTINATION'.`)
+          var text = convo.personality.reply({ user: message.user, key: 'upgrade_apply_finished' })
+          bot.reply(message, text)
         })
       })
     })
@@ -100,8 +107,8 @@ function UpgradeConvo (config) {
           function (err, results) {
             if (err) {
               controller.say({
-                text: `Sorry folks, we're experiencing some mechanical difficulties: ${err}.`,
-                channel: convo.defaultChannel
+                text: convo.personality.say({ key: 'upgrade_apply_error', args: [err] }),
+                channel: convo.notificationChannel
               })
               return
             }
@@ -122,8 +129,8 @@ function UpgradeConvo (config) {
             }
 
             controller.say({
-              text: `We've upgraded your tickets with ${releaseMsg}! Board the plane by telling me 'deploy DESTINATION'.`,
-              channel: convo.defaultChannel
+              text: convo.personality.say({ key: 'upgrade_apply_finished', args: [releaseMsg] }),
+              channel: convo.notificationChannel
             })
           })
       }, convo.interval)

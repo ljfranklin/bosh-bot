@@ -390,20 +390,16 @@ function BoshRunner (config = {}) {
 
       runCmd(function (runErr) {
         async.parallel(cleanupCbs, function (cleanupErr) {
-          var shouldRedact
-          var err
-          if (err && cleanupErr) {
-            err = new Error(`Bosh err: ${runErr}, Cleanup Err: ${cleanupErr}`)
-            shouldRedact = true
-          } else if (runErr) {
+          var err = null
+          if (runErr) {
+            console.log(`Error running deploy: ${err}`)
             err = runErr
-            shouldRedact = true
-          } else {
+          } else if (cleanupErr) {
+            console.log(`Error cleaning up after deploy: ${err}`)
             err = cleanupErr
-            shouldRedact = false
           }
 
-          taskEndedCb(err, shouldRedact)
+          taskEndedCb(err)
         })
       })
     })

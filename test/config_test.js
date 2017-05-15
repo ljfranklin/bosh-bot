@@ -7,7 +7,7 @@ var yaml = require('js-yaml')
 
 var Config = require('../src/config.js')
 
-describe('BoshBot', function () {
+describe('Config', function () {
   var config
   var configPath
 
@@ -80,6 +80,7 @@ describe('BoshBot', function () {
     })
 
     it('returns default values if no value is provided', function () {
+      expect(config.get('personality')).to.eql('captain_bucky')
       expect(config.get('bosh.releases')).to.eql([])
       expect(config.get('bosh.stemcells')).to.eql([])
       expect(config.get('bosh.deployments')).to.eql([])

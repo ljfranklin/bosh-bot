@@ -1,6 +1,7 @@
 
 function DeployConvo (config = {}) {
   var convo = {
+    personality: config.personality,
     deployments: config.deployments,
     assetsFetcher: config.assetsFetcher,
     assets: config.assets,
@@ -16,8 +17,9 @@ function DeployConvo (config = {}) {
       })
 
       if (deployment == null) {
-        var knownDeploymentNames = convo.deployments.map(function (d) { return `*${d.name}*` })
-        bot.reply(message, `<@${message.user}> I'm afraid my navigator doesn't know the destination *${deploymentName}*. The destinations we know about are: ${knownDeploymentNames.join(', ')}.`)
+        var knownDeploymentNames = convo.deployments.map(function (d) { return `*${d.name}*` }).join(', ')
+        var text = convo.personality.reply({ user: message.user, key: 'deploy_unknown_error', args: [deploymentName, knownDeploymentNames] })
+        bot.reply(message, text)
         return
       }
 
@@ -25,11 +27,13 @@ function DeployConvo (config = {}) {
         return convo.assets.find(function (a) { return a.name === assetName })
       })
       if (assetsToFetch.length > 0) {
-        bot.reply(message, `<@${message.user}> Give us a minute to load your assets onto the plane...`)
+        var text = convo.personality.reply({ user: message.user, key: 'deploy_starting' })
+        bot.reply(message, text)
       }
       convo.assetsFetcher.fetchAll(assetsToFetch, function (assetsErr) {
         if (assetsErr) {
-          bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${assetsErr}.`)
+          var text = convo.personality.reply({ user: message.user, key: 'deploy_starting_error', args: [assetsErr] })
+          bot.reply(message, text)
           return
         }
 
@@ -45,47 +49,47 @@ function DeployConvo (config = {}) {
 
         convo.runner.showDiff(deployOpts, function (err, diffOutput) {
           if (err) {
-            bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${err}.`)
+            var text = convo.personality.reply({ user: message.user, key: 'deploy_starting_error', args: [err] })
+            bot.reply(message, text)
             return
           }
 
           bot.startConversation(message, function (err, conversation) {
             if (err) {
-              bot.reply(message, `<@${message.user}> Ran into an issue loading the plane: ${err}.`)
+              var text = convo.personality.reply({ user: message.user, key: 'deploy_starting_error', args: [err] })
+              bot.reply(message, text)
               return
             }
 
-            var prompt = `<@${message.user}> Here's our flight plan for today:\n*${diffOutput}*\nRespond with *'takeoff'* when you're ready!`
+            var prompt = convo.personality.reply({ user: message.user, key: 'deploy_start_prompt', args: [diffOutput] })
             conversation.ask(prompt, [{ pattern: 'takeoff',
               callback: function (response, conversation) {
                 var taskID = null
                 var taskStarted = function (id, cancelCb) {
                   taskID = id
 
-                  var cancelPrompt = `<@${message.user}> We're off! Run \`bosh task ${taskID}\` to track the flight, and respond with *'mayday'* to perform an emergency landing.`
+                  var cancelPrompt = convo.personality.reply({ user: message.user, key: 'deploy_cancel_prompt', args: [taskID] })
                   conversation.ask(cancelPrompt, [{ pattern: 'mayday',
                     callback: function (response, conversation) {
-                      conversation.say(`<@${message.user}> Hold on tight, this may get a little bumpy...`)
+                      var text = convo.personality.reply({ user: message.user, key: 'deploy_canceling' })
+                      conversation.say(text)
                       cancelCb()
                       conversation.next()
                     }}])
                   conversation.next()
                 }
 
-                var taskEnded = function (err, shouldRedact) {
+                var taskEnded = function (err) {
                   var response
                   if (err == null) {
-                    response = `Another successful landing, the deploy is finished!`
+                    response = convo.personality.reply({ user: message.user, key: 'deploy_finished' })
                   } else if (taskID != null) {
-                    response = `Oh no, we had to make an emergency landing! Run \`bosh task ${taskID}\` to see the blackbox.`
+                    response = convo.personality.reply({ user: message.user, key: 'deploy_failed_with_task_id', args: [taskID] })
                   } else {
-                    response = 'Apologies for the delay folks. We need to fix a mechanical problem before take-off.'
-                  }
-                  if (err && shouldRedact === false) {
-                    response += `\nReport: ${err}`
+                    response = convo.personality.reply({ user: message.user, key: 'deploy_failed_immediately', args: [err] })
                   }
 
-                  bot.reply(message, `<@${message.user}> ${response}`)
+                  bot.reply(message, response)
 
                   if (conversation.isActive()) {
                     conversation.stop()
@@ -94,7 +98,8 @@ function DeployConvo (config = {}) {
                 convo.runner.deploy(deployOpts, taskStarted, taskEnded)
               }}, { default: true,
                 callback: function (response, conversation) {
-                  conversation.say(`<@${message.user}> I guess you don't want to *'takeoff'* after all...`)
+                  var text = convo.personality.reply({ user: message.user, key: 'deploy_not_confirmed' })
+                  conversation.say(text)
                   conversation.next()
                 }}])
           })
@@ -103,7 +108,8 @@ function DeployConvo (config = {}) {
     })
 
     controller.hears('takeoff', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      bot.reply(message, `<@${message.user}> Let me know our destination with *'deploy DESTINATION'*.`)
+      var text = convo.personality.reply({ user: message.user, key: 'deploy_not_in_progress' })
+      bot.reply(message, text)
     })
   }
 
