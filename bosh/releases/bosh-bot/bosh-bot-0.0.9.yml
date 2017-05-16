@@ -1,0 +1,26 @@
+name: bosh-bot
+version: 0.0.9
+commit_hash: dd2c9b3
+uncommitted_changes: false
+jobs:
+- name: bosh-bot
+  version: 80f3d9599b6b46e43a27e4c03ed45bc87c466b85
+  fingerprint: 80f3d9599b6b46e43a27e4c03ed45bc87c466b85
+  sha1: 7a689d2d8ea115aeb8f689990e527ac54a444c5e
+packages:
+- name: bosh-bot
+  version: 5b6e7ef3b8fe2f533d70dc220b4a903e7c1d078d
+  fingerprint: 5b6e7ef3b8fe2f533d70dc220b4a903e7c1d078d
+  sha1: acf59bede13109141708da1d917224809dabf995
+  dependencies:
+  - nodejs
+- name: bosh-cli
+  version: ff92e47db9f6c0c2273bd80b2a88ab571410f263
+  fingerprint: ff92e47db9f6c0c2273bd80b2a88ab571410f263
+  sha1: f9adc65663933c28c1408744ec33e4fffed2464d
+  dependencies: []
+- name: nodejs
+  version: 71a2c43aa641a0f5c0ab6014d3e944788a60c725
+  fingerprint: 71a2c43aa641a0f5c0ab6014d3e944788a60c725
+  sha1: 3c97b4eb03d23c954940e74b6307a86b5e4e356b
+  dependencies: []
