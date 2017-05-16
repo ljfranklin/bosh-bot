@@ -72,7 +72,8 @@ describe('UpgradeChecker', function () {
           name: 'newer-stemcell',
           version: '1.1',
           url: 'fake-new-url',
-          displayName: 'newer-stemcell 1.1'
+          displayName: 'newer-stemcell 1.1',
+          boshioID: 'newer-stemcell'
         }])
 
         done()
@@ -112,7 +113,50 @@ describe('UpgradeChecker', function () {
           name: 'new',
           version: '1.1',
           url: 'fake-new-url',
-          displayName: 'new 1.1'
+          displayName: 'new 1.1',
+          boshioID: 'newer-release'
+        }])
+
+        done()
+      })
+    })
+
+    it('embeds the release notes link if that page exists', function (done) {
+      this.timeout(10000)
+
+      checker = UpgradeChecker({
+        boshRunner: fakeRunner,
+        boshioClient: fakeBoshio,
+        stemcells: [],
+        releases: [
+          {
+            name: 'concourse',
+            boshio_id: 'github.com/concourse/concourse'
+          }
+        ]
+      })
+
+      var boshioVersions = {
+        'github.com/concourse/concourse': {
+          version: '2.5.0',
+          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0'
+        }
+      }
+      td.when(fakeBoshio.getLatestReleaseVersions(['github.com/concourse/concourse']))
+        .thenCallback(null, boshioVersions)
+
+      var directorVersions = {}
+      td.when(fakeRunner.getLatestReleaseVersions())
+        .thenCallback(null, directorVersions)
+
+      checker.upgradeableReleases(function (err, newReleases) {
+        expect(err).to.be.null
+        expect(newReleases).to.eql([{
+          name: 'concourse',
+          version: '2.5.0',
+          url: 'https://bosh.io/d/github.com/concourse/concourse?v=2.5.0',
+          displayName: '<https://github.com/concourse/concourse/releases/tag/v2.5.0|concourse 2.5.0>',
+          boshioID: 'github.com/concourse/concourse'
         }])
 
         done()
