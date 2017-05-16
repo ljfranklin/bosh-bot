@@ -13,6 +13,7 @@ upgrade_check_none_available: "I'm sorry, there don't appear to be any upgrades 
 upgrade_check_error: "Sorry, we hit a glitch trying to check for upgrades: %s."
 upgrade_apply_starting: "You're in luck! We have upgrades available for %s. Give me a minute to set that up..."
 upgrade_apply_finished: "Your tickets have been upgraded! Board the plane by telling me 'deploy DESTINATION'."
+upgrade_apply_timer_finished: "We've upgraded your tickets with %s! Board the plane by telling me 'deploy DESTINATION'."
 upgrade_apply_error: "Sorry, we hit a glitch trying to apply your upgrades: %s."
 
 deploy_trigger: "deploy ([a-zA-Z0-9-_]+)"

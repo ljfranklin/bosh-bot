@@ -129,7 +129,7 @@ function UpgradeConvo (config) {
             }
 
             controller.say({
-              text: convo.personality.say({ key: 'upgrade_apply_finished', args: [releaseMsg] }),
+              text: convo.personality.say({ key: 'upgrade_apply_timer_finished', args: [releaseMsg] }),
               channel: convo.notificationChannel
             })
           })
