@@ -44,9 +44,8 @@ function BoshRunner (config = {}) {
         return
       }
       var deployments = JSON.parse(stdout)
-      var nameColumn = 0
       var deploymentNames = deployments.Tables[0].Rows.map(function (row) {
-        return row[nameColumn]
+        return row.name
       })
 
       var deploymentExists = deploymentNames.some(function (name) {
@@ -89,8 +88,8 @@ function BoshRunner (config = {}) {
       var releases = {}
       releaseTuples.forEach(function (tuple) {
         // assumes first element has the highest version
-        var releaseName = tuple[0]
-        var releaseVersion = tuple[1].replace('*', '') // remove 'in-use' indicator
+        var releaseName = tuple.name
+        var releaseVersion = tuple.version.replace('*', '') // remove 'in-use' indicator
         if (!releases.hasOwnProperty(releaseName)) {
           console.log(`Director has version '${releaseVersion}' of '${releaseName}'`)
           releases[releaseName] = {
@@ -146,8 +145,8 @@ function BoshRunner (config = {}) {
       var stemcells = {}
       results.forEach(function (tuple) {
         // assumes first element has the highest version
-        var name = tuple[0]
-        var version = tuple[1].replace('*', '') // remove 'in-use' indicator
+        var name = tuple.name
+        var version = tuple.version.replace('*', '') // remove 'in-use' indicator
         if (!stemcells.hasOwnProperty(name)) {
           console.log(`Director has version '${version}' of '${name}'`)
           stemcells[name] = {

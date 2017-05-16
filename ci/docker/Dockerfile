@@ -12,5 +12,5 @@ RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://raw.githubusercontent.com/
 
 RUN npm install -g mocha
 
-RUN wget -q -O /usr/local/bin/bosh 'https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.1-linux-amd64' && \
+RUN wget -q -O /usr/local/bin/bosh 'https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.16-linux-amd64' && \
   chmod +x /usr/local/bin/bosh
