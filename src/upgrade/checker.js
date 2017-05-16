@@ -1,6 +1,6 @@
 var semver = require('semver')
-var async = require("async");
-var request = require("request");
+var async = require('async')
+var request = require('request')
 
 function UpgradeChecker (config) {
   var checker = {
@@ -34,7 +34,7 @@ function UpgradeChecker (config) {
 
         var stemcellsToUpload = filterNewerVersions(checker.stemcells, directorVersions, boshioVersions)
 
-        stemcellsToUpload.forEach(function(stemcell) {
+        stemcellsToUpload.forEach(function (stemcell) {
           stemcell.displayName = `${stemcell.name} ${stemcell.version}`
         })
 
@@ -67,7 +67,7 @@ function UpgradeChecker (config) {
 
         var releasesToUpload = filterNewerVersions(checker.releases, directorVersions, boshioVersions)
 
-        async.map(releasesToUpload, function(release, callback) {
+        async.map(releasesToUpload, function (release, callback) {
           if (release.boshioID.includes('github.com') === false) {
             callback(null, null)
             return
@@ -75,13 +75,13 @@ function UpgradeChecker (config) {
 
           var releaseNotesURL = `https://${release.boshioID}/releases/tag/v${release.version}`
           request(releaseNotesURL, function (error, response, _) {
-            if (!error && response.statusCode == 200) {
+            if (!error && response.statusCode === 200) {
               callback(null, releaseNotesURL)
             } else {
               callback(null, null)
             }
-          });
-        }, function(_, results) {
+          })
+        }, function (_, results) {
           for (var i = 0; i < results.length; i++) {
             releasesToUpload[i].displayName = `${releasesToUpload[i].name} ${releasesToUpload[i].version}`
 
@@ -92,7 +92,7 @@ function UpgradeChecker (config) {
           }
 
           cb(null, releasesToUpload)
-        });
+        })
       })
     })
   }
