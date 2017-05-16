@@ -19,6 +19,9 @@ properties:
   slack.authorized_channels:
     description: ''
     default: []
+  slack.notification_channel:
+    description: ''
+    default: null
 
   bosh.env:
     description: ''

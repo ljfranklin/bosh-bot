@@ -4,6 +4,7 @@ slack:
   token: <%= p('slack.token') %>
   authorized_usernames: <%= p('slack.authorized_usernames') %>
   authorized_channels: <%= p('slack.authorized_channels') %>
+  notification_channel: <%= p('slack.notification_channel', null) %>
 bosh:
   env: <%= p('bosh.env') %>
   user: <%= p('bosh.user') %>
