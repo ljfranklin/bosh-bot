@@ -50,7 +50,7 @@ function Auth (config = {}) {
       if (authorizedUserIDs.includes(message.user)) {
         next()
       } else {
-        var text = auth.personality.reply({ user: message.user, key: 'not_authorized' })
+        var text = auth.personality.reply({ user: message.user, key: 'not_authorized_error' })
         bot.reply(message, text)
       }
     })

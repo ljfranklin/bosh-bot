@@ -15,7 +15,7 @@ describe('Personality', function () {
   it('returns a simple reply', function () {
     var opts = {
       user: fakeUser,
-      key: 'hello'
+      key: 'hello_response'
     }
     expect(personality.reply(opts)).to.eql('<@fake-user-id> Hello yourself.')
   })
@@ -31,7 +31,7 @@ describe('Personality', function () {
 
   it('returns a simple saying', function () {
     var opts = {
-      key: 'hello'
+      key: 'hello_response'
     }
     expect(personality.say(opts)).to.eql('Hello yourself.')
   })
@@ -42,5 +42,9 @@ describe('Personality', function () {
       args: ['fake-error']
     }
     expect(personality.say(opts)).to.eql('Sorry, we hit a glitch trying to check for upgrades: fake-error.')
+  })
+
+  it('returns the text for a given key', function () {
+    expect(personality.text('ping_trigger')).to.eql('ping')
   })
 })

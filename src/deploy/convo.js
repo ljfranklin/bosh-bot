@@ -9,7 +9,7 @@ function DeployConvo (config = {}) {
   }
 
   convo.addListeners = function (controller) {
-    controller.hears('deploy ([a-zA-Z0-9-_]+)', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
+    controller.hears(convo.personality.text('deploy_trigger'), ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
       var deploymentName = message.match[1]
 
       var deployment = convo.deployments.find(function (d) {
@@ -62,14 +62,14 @@ function DeployConvo (config = {}) {
             }
 
             var prompt = convo.personality.reply({ user: message.user, key: 'deploy_start_prompt', args: [diffOutput] })
-            conversation.ask(prompt, [{ pattern: 'takeoff',
+            conversation.ask(prompt, [{ pattern: convo.personality.text('deploy_confirmation_trigger'),
               callback: function (response, conversation) {
                 var taskID = null
                 var taskStarted = function (id, cancelCb) {
                   taskID = id
 
                   var cancelPrompt = convo.personality.reply({ user: message.user, key: 'deploy_cancel_prompt', args: [taskID] })
-                  conversation.ask(cancelPrompt, [{ pattern: 'mayday',
+                  conversation.ask(cancelPrompt, [{ pattern: convo.personality.text('deploy_cancel_trigger'),
                     callback: function (response, conversation) {
                       var text = convo.personality.reply({ user: message.user, key: 'deploy_canceling' })
                       conversation.say(text)
@@ -107,7 +107,7 @@ function DeployConvo (config = {}) {
       })
     })
 
-    controller.hears('takeoff', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
+    controller.hears(convo.personality.text('deploy_confirmation_trigger'), ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
       var text = convo.personality.reply({ user: message.user, key: 'deploy_not_in_progress' })
       bot.reply(message, text)
     })

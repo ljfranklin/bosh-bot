@@ -29,11 +29,15 @@ function Personality (name) {
   }
 
   personality.say = function (opts) {
-    var text = `${personality.sayings[opts.key]}`
+    var text = personality.sayings[opts.key]
     if (opts.args) {
       text = util.format(text, ...opts.args)
     }
     return text
+  }
+
+  personality.text = function (key) {
+    return personality.sayings[key]
   }
 
   return personality

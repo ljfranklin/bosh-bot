@@ -11,7 +11,7 @@ function UpgradeConvo (config) {
   }
 
   convo.addListeners = function (controller) {
-    controller.hears('upgrade', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
+    controller.hears(convo.personality.text('upgrade_trigger'), ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
       var text = convo.personality.reply({ user: message.user, key: 'upgrade_check_starting' })
       bot.reply(message, text)
       async.parallel([

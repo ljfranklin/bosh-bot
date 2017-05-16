@@ -64,23 +64,23 @@ function BoshBot (config) {
     })
     deployConvo.addListeners(controller)
 
-    controller.hears('hello', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      var text = personality.reply({ user: message.user, key: 'hello' })
+    controller.hears(personality.text('hello_trigger'), ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
+      var text = personality.reply({ user: message.user, key: 'hello_response' })
       bot.reply(message, text)
     })
 
-    controller.hears('ping', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      var text = personality.reply({ user: message.user, key: 'ping' })
+    controller.hears(personality.text('ping_trigger'), ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
+      var text = personality.reply({ user: message.user, key: 'ping_response' })
       bot.reply(message, text)
     })
 
-    controller.hears('env', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      var text = personality.reply({ user: message.user, key: 'env', args: [boshbot.env] })
+    controller.hears(personality.text('env_trigger'), ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
+      var text = personality.reply({ user: message.user, key: 'env_response', args: [boshbot.env] })
       bot.reply(message, text)
     })
 
     controller.hears('.*', ['direct_message', 'direct_mention', 'mention'], function (bot, message) {
-      var text = personality.reply({ user: message.user, key: 'unknown_message' })
+      var text = personality.reply({ user: message.user, key: 'unknown_response' })
       bot.reply(message, text)
     })
 

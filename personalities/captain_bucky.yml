@@ -1,15 +1,23 @@
-hello: "Hello yourself."
-ping: "pong"
-env: "Currently targeting *%s*."
+hello_trigger: '^(hello|hi|hey)$'
+hello_response: "Hello yourself."
 
+ping_trigger: "ping"
+ping_response: "pong"
+
+env_trigger: "env"
+env_response: "Currently targeting *%s*."
+
+upgrade_trigger: "upgrade"
 upgrade_check_starting: "Let's see if any flight upgrades are available..."
 upgrade_check_none_available: "I'm sorry, there don't appear to be any upgrades available."
 upgrade_check_error: "Sorry, we hit a glitch trying to check for upgrades: %s."
-
 upgrade_apply_starting: "You're in luck! We have upgrades available for %s. Give me a minute to set that up..."
 upgrade_apply_finished: "Your tickets have been upgraded! Board the plane by telling me 'deploy DESTINATION'."
 upgrade_apply_error: "Sorry, we hit a glitch trying to apply your upgrades: %s."
 
+deploy_trigger: "deploy ([a-zA-Z0-9-_]+)"
+deploy_confirmation_trigger: "takeoff"
+deploy_cancel_trigger: "mayday"
 deploy_starting: "Give us a minute to load your assets onto the plane..."
 deploy_start_prompt: "Here's our flight plan for today:\n*%s*\nRespond with *'takeoff'* when you're ready!"
 deploy_cancel_prompt: "We're off! Run `bosh task %s` to track the flight, and respond with *'mayday'* to perform an emergency landing."
@@ -22,7 +30,6 @@ deploy_failed_with_task_id: "Oh no, we had to make an emergency landing! Run `bo
 deploy_starting_error: "Ran into an issue loading the plane: %s"
 deploy_unknown_error: "I'm afraid my navigator doesn't know the destination *%s*. The destinations we know about are: %s."
 
-not_authorized: "I'm afraid you don't have a ticket for this flight. Please see one of our authorized staff to get this sorted out."
+not_authorized_error: "I'm afraid you don't have a ticket for this flight. Please see one of our authorized staff to get this sorted out."
 
-unknown_message: "Sorry, didn't catch that..."
-
+unknown_response: "Sorry, didn't catch that..."
