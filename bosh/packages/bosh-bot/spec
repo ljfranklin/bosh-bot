@@ -4,6 +4,7 @@ dependencies:
 - nodejs
 files:
 - node_modules/**/*
+- personalities/*
 - src/**/*
 - bot.js
 - package.json
