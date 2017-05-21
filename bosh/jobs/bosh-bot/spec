@@ -13,31 +13,65 @@ packages:
 
 properties:
   slack.token:
-    description: ''
+    description: 'The Slack API token for your Bot user'
   slack.authorized_usernames:
-    description: ''
+    description: 'List of Slack usernames that are allowed to trigger deploys via the Bot'
   slack.authorized_channels:
-    description: ''
+    description: 'List of Slack channel names that the Bot will listen in'
     default: []
   slack.notification_channel:
-    description: ''
+    description: 'Name of the Slack channel the Bot use for background upgrade messages'
     default: null
 
   bosh.env:
-    description: ''
+    description: 'URL of the BOSH Director the Bot will talk to'
   bosh.user:
-    description: ''
+    description: 'BOSH Director client'
   bosh.password:
-    description: ''
+    description: 'BOSH Director client secret'
   bosh.releases:
-    description: ''
+    description: 'List of releases the Bot will check for upgrades'
     default: []
+    example:
+    - name: concourse
+      boshio_id: 'github.com/concourse/concourse'
+    - name: garden-runc
+      boshio_id: 'github.com/cloudfoundry/garden-runc-release'
   bosh.stemcells:
-    description: ''
+    description: 'List of stemcells the Bot will check for upgrades'
     default: []
+    example:
+    - boshio_id: bosh-google-kvm-ubuntu-trusty-go_agent
   bosh.deployments:
-    description: ''
+    description: 'List of deployment configs the Bot can deploy'
     default: []
+    example:
+    - name: concourse
+      manifest_path: 'deployments/concourse/concourse.yml'
+      assets:
+        - deployments
+        - certs
+      var_files:
+        concourse_ssl_cert: 'certs/certificates/example.com.crt'
+        concourse_ssl_key: 'certs/certificates/example.com.key'
+      vars:
+        github_client_id: EXAMPLE_ID
+        github_client_secret: EXAMPLE_SECRET
+      vars_store:
+        endpoint: storage.googleapis.com # optional
+        access_key: EXAMPLE_ACCESS_KEY
+        secret_key: EXAMPLE_SECRET_KEY
+        bucket: EXAMPLE_BUCKET
+        key:    vars-store.yml
   bosh.assets:
-    description: ''
+    description: 'List of assets, e.g. git repos containing config files or SSH keys, that the Bot will fetch on deploy'
     default: []
+    example:
+    - name: deployments
+      type: 'git'
+      uri: 'https://github.com/EXAMPLE/REPO.git'
+    - name: certs
+      type: 'git'
+      uri: 'ssh://git@github.com/EXAMPLE/PRIVATE_REPO.git'
+      deploy_key: |
+        YOUR_PRIVATE_SSH_KEY
