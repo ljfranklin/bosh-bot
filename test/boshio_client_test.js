@@ -5,7 +5,7 @@ var BoshioClient = require('../src/boshio_client')
 describe('BoshioClient', function () {
   var client
 
-  var testTimeout = 5000
+  var testTimeout = 10000
 
   beforeEach(function () {
     client = BoshioClient()
@@ -25,7 +25,7 @@ describe('BoshioClient', function () {
 
         var result = results[id]
         expect(result.name).to.eql(id)
-        expect(result.version).to.match(/\d+\.\d+\.\d+.*/)
+        expect(result.version).to.match(/\d+(\.\d+)?(\.\d+)?/)
         expect(result.url).to.include('https')
         done()
       })
@@ -41,7 +41,7 @@ describe('BoshioClient', function () {
 
         var result = results[id]
         expect(result.name).to.eql(id)
-        expect(result.version).to.match(/\d+\..*/)
+        expect(result.version).to.match(/\d+(\.\d+)?(\.\d+)?/)
         expect(result.url).to.include('https')
         done()
       })
@@ -55,7 +55,7 @@ describe('BoshioClient', function () {
 
         var result = results[id]
         expect(result.name).to.eql(id)
-        expect(result.version).to.match(/\d+\..*/)
+        expect(result.version).to.match(/\d+(\.\d+)?(\.\d+)?/)
         expect(result.url).to.include('https')
         done()
       })

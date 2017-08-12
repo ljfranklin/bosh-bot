@@ -23,6 +23,9 @@ describe('UpgradeChecker', function () {
         },
         {
           boshio_id: 'older-stemcell'
+        },
+        {
+          boshio_id: 'non-semver-stemcell'
         }
       ],
       releases: [
@@ -50,9 +53,14 @@ describe('UpgradeChecker', function () {
           name: 'older-stemcell',
           version: '0.1',
           url: 'fake-old-url'
+        },
+        'non-semver-stemcell': {
+          name: 'non-semver-stemcell',
+          version: '1',
+          url: 'fake-non-semver-url'
         }
       }
-      td.when(fakeBoshio.getLatestStemcellVersions(['newer-stemcell', 'older-stemcell']))
+      td.when(fakeBoshio.getLatestStemcellVersions(['newer-stemcell', 'older-stemcell', 'non-semver-stemcell']))
         .thenCallback(null, boshioVersions)
 
       var directorVersions = {
@@ -74,6 +82,12 @@ describe('UpgradeChecker', function () {
           url: 'fake-new-url',
           displayName: 'newer-stemcell 1.1',
           boshioID: 'newer-stemcell'
+        }, {
+          name: 'non-semver-stemcell',
+          version: '1',
+          url: 'fake-non-semver-url',
+          displayName: 'non-semver-stemcell 1',
+          boshioID: 'non-semver-stemcell'
         }])
 
         done()

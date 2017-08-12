@@ -105,11 +105,11 @@ function UpgradeChecker (config) {
       var directorResult = directorVersions[directorID] || { version: '0.0.0' }
 
       var boshioVersion = boshioResult.version
-      while (boshioVersion.match(/\./g).length < 2) {
+      while ((boshioVersion.match(/\./g) || []).length < 2) {
         boshioVersion += '.0'
       }
       var directorVersion = directorResult.version
-      while (directorVersion.match(/\./g).length < 2) {
+      while ((directorVersion.match(/\./g) || []).length < 2) {
         directorVersion += '.0'
       }
       if (semver.gt(boshioVersion, directorVersion)) {
