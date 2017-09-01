@@ -9,7 +9,7 @@ function BoshioClient () {
     console.log(`Checking for bosh.io release versions of '${releaseID}'...`)
     https.get(`https://bosh.io/api/v1/releases/${releaseID}`, function (response) {
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        cb(new Error(`Failed to fetch boshio release versions: ${response.toString()}`), {})
+        cb(new Error(`Failed to fetch boshio release versions`), {})
         return
       }
 
@@ -40,7 +40,7 @@ function BoshioClient () {
     console.log(`Checking for bosh.io stemcell versions of '${stemcellID}'...`)
     https.get(`https://bosh.io/api/v1/stemcells/${stemcellID}`, function (response) {
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        cb(new Error(`Failed to fetch boshio stemcell versions: ${response.toString()}`), {})
+        cb(new Error(`Failed to fetch boshio stemcell versions`), {})
         return
       }
 

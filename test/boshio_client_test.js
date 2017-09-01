@@ -5,7 +5,7 @@ var BoshioClient = require('../src/boshio_client')
 describe('BoshioClient', function () {
   var client
 
-  var testTimeout = 10000
+  var testTimeout = 30000
 
   beforeEach(function () {
     client = BoshioClient()
