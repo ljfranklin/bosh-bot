@@ -2,7 +2,7 @@
   type: replace
   value:
     name: bosh-bot
-    sha1: f595af045dccca1a61d5bf7cd918756fb21ec1f6
+    sha1: 2e7d4687fce669e822a8e133c400b3263a90d1b7
     url: https://storage.googleapis.com/bosh-bot-releases/bosh-bot-0.0.15-dev.tgz
     version: 0.0.15
 - path: /instance_groups/name=bosh/jobs/-
