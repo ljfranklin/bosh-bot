@@ -18,6 +18,7 @@ exec >> "${log_dir}/bosh-bot-ctl.log" 2>&1
 package_dir="/var/vcap/jobs/bosh-bot/packages"
 export PATH="$PATH:${package_dir}/nodejs/bin/"
 export PATH="$PATH:${package_dir}/bosh-cli/"
+export PATH="$PATH:${package_dir}/git/bin/"
 
 export BOSH_BOT_CONFIG="/var/vcap/jobs/bosh-bot/config/bot.yml"
 
