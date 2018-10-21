@@ -2,6 +2,10 @@ bosh-cli/bosh:
   size: 19625703
   object_id: 3f7b79ee-817d-45e0-5ab8-7b3309a9d8f3
   sha: 09edb717dcceeb948f109ef882d2a3366f21c5c4
+git/git-v2.19.1.tar.gz:
+  size: 7708410
+  object_id: 846adf01-c2f6-48ca-676e-908d080ca2c0
+  sha: 580108d1c8cfe21af969b47c2363fd166240d877
 nodejs/node-v7.7.4-linux-x64.tar.xz:
   size: 10355944
   object_id: a0c9fc50-1be7-4a58-7f32-d41be50d66d7

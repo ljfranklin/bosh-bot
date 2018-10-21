@@ -2,9 +2,9 @@
   type: replace
   value:
     name: bosh-bot
-    sha1: 66d0f4e0a2618ca1f7454e498f26f544cef611a6
-    url: https://storage.googleapis.com/bosh-bot-releases/bosh-bot-0.0.14.tgz
-    version: 0.0.14
+    sha1: f595af045dccca1a61d5bf7cd918756fb21ec1f6
+    url: https://storage.googleapis.com/bosh-bot-releases/bosh-bot-0.0.15-dev.tgz
+    version: 0.0.15
 - path: /instance_groups/name=bosh/jobs/-
   type: replace
   value:

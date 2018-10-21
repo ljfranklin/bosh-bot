@@ -4,12 +4,12 @@ name: bosh-bot
 templates:
   config.yml.erb: config/bot.yml
   ctl.erb:  bin/ctl
-  pre-start.erb: bin/pre-start
 
 packages:
 - bosh-bot
 - nodejs
 - bosh-cli
+- git
 
 properties:
   slack.token:
