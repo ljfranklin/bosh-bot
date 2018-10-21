@@ -1,5 +1,7 @@
 set -e -x
 
+export PATH=${PREFIX}/bin:/var/vcap/packages/autoconf/bin:$PATH
+
 tar xzf git/git-*.tar.gz
 
 cd git-*
