@@ -64,8 +64,8 @@ function Config (configPath) {
         missingFields.push(requiredField)
       }
     })
-    if (config.get('bosh.disable_background_upgrades') === false && config.get('slack.notification_channel') == null) {
-      missingFields.push('slack.notification_channel')
+    if (config.get('bosh.disable_background_upgrades') === false && config.get('slack.notification_channel_id') == null) {
+      missingFields.push('slack.notification_channel_id')
     }
 
     if (missingFields.length > 0) {

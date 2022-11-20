@@ -16,7 +16,7 @@ instance_groups:
       slack:
         authorized_channels: ((bosh_bot_slack_authorized_channels))
         authorized_usernames: ((bosh_bot_slack_authorized_usernames))
-        notification_channel: ((bosh_bot_slack_notification_channel))
+        notification_channel_id: ((bosh_bot_slack_notification_channel_id))
         token: ((bosh_bot_slack_token))
     release: bosh-bot
   name: bosh-bot

@@ -33,15 +33,7 @@ slack.start(function (err, controller, response) {
 
   var notificationChannelID = null
   if (!config.get('bosh').disable_background_upgrades) {
-    var notificationChannelName = config.get('slack').notification_channel
-    var notificationChannel = response.channels.find(function (channel) {
-      return (channel.name === notificationChannelName)
-    })
-    if (!notificationChannel) {
-      console.error(`Failed to find channel with name '${notificationChannelName}'`)
-      process.exit(1)
-    }
-    notificationChannelID = notificationChannel.id
+    notificationChannelID = config.get('slack').notification_channel_id
   }
 
   var personality = Personality(config.get('personality'))
@@ -77,7 +69,7 @@ slack.start(function (err, controller, response) {
 
     var pidfile = config.get('pidfile')
     if (pidfile) {
-      fs.writeFileSync(pidfile, process.pid)
+      fs.writeFileSync(pidfile, process.pid.toString())
     }
 
     console.log('Ready for connections!')

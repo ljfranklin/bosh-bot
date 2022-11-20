@@ -19,7 +19,7 @@ properties:
   slack.authorized_channels:
     description: 'List of Slack channel names that the Bot will listen in'
     default: []
-  slack.notification_channel:
+  slack.notification_channel_id:
     description: 'Name of the Slack channel the Bot use for background upgrade messages'
     default: null
 
