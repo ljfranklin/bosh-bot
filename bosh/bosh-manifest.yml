@@ -27,9 +27,9 @@ instance_groups:
 name: bosh-bot
 releases:
 - name: bosh-bot
-  sha1: b59e1a076ce12af3d44392038bba44bada94a564
-  url: https://storage.googleapis.com/bosh-bot-releases/bosh-bot-0.0.15.tgz
-  version: 0.0.15
+  sha1: ebac66a4097f76ddca8da26eb2abfb20f1bfd191
+  url: https://storage.googleapis.com/bosh-bot-releases/bosh-bot-0.0.16.tgz
+  version: 0.0.16
 stemcells:
 - alias: default
   os: ubuntu-trusty
